@@ -10,23 +10,27 @@
 A Home Assistant custom integration that logs into the [PREdistribuce](https://www.predistribuce.cz/) customer portal (the electricity distributor for Prague, Czech Republic), downloads your smart meter's 15-minute consumption profile for the previous day, and imports it into Home Assistant as long-term **external statistics** — so it shows up in the **Energy dashboard** just like a native energy sensor.
 
 ![Energy dashboard with imported PREdistribuce consumption](docs/images/energy-dashboard.png)
-*(placeholder — screenshot of the Energy dashboard showing imported consumption)*
+*(placeholder  — screenshot of the Energy dashboard showing imported consumption)*
 
 ## Table of contents
 
-- [How it works](#how-it-works)
-- [Requirements](#requirements)
-- [Installation](#installation)
-- [Configuration](#configuration)
-  - [Initial setup](#initial-setup)
-  - [Adding another metering point later](#adding-another-metering-point-later)
-  - [Changing the import schedule](#changing-the-import-schedule)
-- [Missing / not-yet-closed days](#missing--not-yet-closed-days)
-- [Known limitations](#known-limitations)
-- [Troubleshooting](#troubleshooting)
-- [Versioning & releases](#versioning--releases)
-- [Disclaimer](#disclaimer)
-- [Credits](#credits)
+- [PREdistribuce — Consumption Profiles](#predistribuce--consumption-profiles)
+  - [Table of contents](#table-of-contents)
+  - [How it works](#how-it-works)
+  - [Requirements](#requirements)
+  - [Installation](#installation)
+    - [Via HACS (recommended)](#via-hacs-recommended)
+    - [Manual](#manual)
+  - [Configuration](#configuration)
+    - [Initial setup](#initial-setup)
+    - [Adding another metering point later](#adding-another-metering-point-later)
+    - [Changing the import schedule](#changing-the-import-schedule)
+  - [Missing / not-yet-closed days](#missing--not-yet-closed-days)
+  - [Known limitations](#known-limitations)
+  - [Troubleshooting](#troubleshooting)
+  - [Versioning \& releases](#versioning--releases)
+  - [Disclaimer](#disclaimer)
+  - [Credits](#credits)
 
 ## How it works
 
