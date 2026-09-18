@@ -1,0 +1,92 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "PREdistribuce",
+        "description": "Zadejte přihlašovací údaje k účtu klientského portálu PREdistribuce. Použijí se jen ke čtení dat o spotřebě — na portálu se nic nemění.",
+        "data": {
+          "username": "Uživatelské jméno",
+          "password": "Heslo"
+        },
+        "data_description": {
+          "username": "E-mail nebo číslo zákazníka, kterým se přihlašujete na predistribuce.cz",
+          "password": "Heslo k portálu"
+        }
+      },
+      "eans": {
+        "title": "Odběrná místa a čas stahování",
+        "description": "Vyberte, která odběrná místa (EANy) se mají importovat, a lokální čas, kdy má proběhnout denní stažení.",
+        "data": {
+          "eans": "Odběrná místa",
+          "import_hour": "Hodina importu",
+          "import_minute": "Minuta importu"
+        },
+        "data_description": {
+          "eans": "Musí být vybráno alespoň jedno.",
+          "import_hour": "Lokální čas (Europe/Prague), 0–23.",
+          "import_minute": "0–59."
+        }
+      },
+      "reauth_confirm": {
+        "title": "Znovu přihlásit PREdistribuce",
+        "description": "Přihlášení k účtu „{username}\" už neplatí. Zadejte aktuální heslo pro pokračování.",
+        "data": {
+          "password": "Heslo"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Neplatné uživatelské jméno nebo heslo.",
+      "cannot_connect": "Nepodařilo se připojit k portálu PREdistribuce.",
+      "no_eans_found": "Na tomto účtu nebyla nalezena žádná odběrná místa (EANy).",
+      "no_eans_selected": "Vyberte alespoň jedno odběrné místo."
+    },
+    "abort": {
+      "already_configured": "Tento účet je už nakonfigurovaný.",
+      "reauth_successful": "Přihlášení bylo úspěšně obnoveno."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Nastavení PREdistribuce",
+        "menu_options": {
+          "schedule": "Změnit čas importu",
+          "metering_points": "Přidat odběrné místo"
+        }
+      },
+      "schedule": {
+        "title": "Čas importu",
+        "data": {
+          "import_hour": "Hodina importu",
+          "import_minute": "Minuta importu"
+        },
+        "data_description": {
+          "import_hour": "Lokální čas (Europe/Prague), 0–23.",
+          "import_minute": "0–59."
+        }
+      },
+      "metering_points": {
+        "title": "Odběrná místa",
+        "description": "Vyberte, která odběrná místa (EANy) se mají importovat. Nově přidané se začne importovat až od teď — pro dřívější data použijte po jejich uzavření tlačítko pro opakované stažení.",
+        "data": {
+          "eans": "Odběrná místa"
+        }
+      }
+    },
+    "error": {
+      "no_eans_selected": "Vyberte alespoň jedno odběrné místo."
+    },
+    "abort": {
+      "invalid_auth": "Neplatné uživatelské jméno nebo heslo.",
+      "cannot_connect": "Nepodařilo se připojit k portálu PREdistribuce."
+    }
+  },
+  "entity": {
+    "button": {
+      "retry_pending": {
+        "name": "Zkusit znovu stáhnout data"
+      }
+    }
+  }
+}

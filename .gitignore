@@ -1,0 +1,5 @@
+__pycache__/
+work/
+*.pyc
+.claude/
+.mcp.json

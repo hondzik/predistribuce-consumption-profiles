@@ -1,0 +1,92 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "PREdistribuce",
+        "description": "Enter the login for your PREdistribuce customer portal account. It is used only to read consumption data — nothing is changed on the portal.",
+        "data": {
+          "username": "Username",
+          "password": "Password"
+        },
+        "data_description": {
+          "username": "Email or customer number used to log in to predistribuce.cz",
+          "password": "Portal password"
+        }
+      },
+      "eans": {
+        "title": "Metering points and schedule",
+        "description": "Select which metering points (EANs) to import, and the local time of day when the daily import should run.",
+        "data": {
+          "eans": "Metering points",
+          "import_hour": "Import hour",
+          "import_minute": "Import minute"
+        },
+        "data_description": {
+          "eans": "At least one must be selected.",
+          "import_hour": "Local time (Europe/Prague), 0–23.",
+          "import_minute": "0–59."
+        }
+      },
+      "reauth_confirm": {
+        "title": "Re-authenticate PREdistribuce",
+        "description": "The login for account \"{username}\" is no longer valid. Enter the current password to continue.",
+        "data": {
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Invalid username or password.",
+      "cannot_connect": "Could not connect to the PREdistribuce portal.",
+      "no_eans_found": "No metering points (EANs) were found on this account.",
+      "no_eans_selected": "Select at least one metering point."
+    },
+    "abort": {
+      "already_configured": "This account is already configured.",
+      "reauth_successful": "Re-authentication was successful."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "PREdistribuce options",
+        "menu_options": {
+          "schedule": "Change import time",
+          "metering_points": "Add a metering point"
+        }
+      },
+      "schedule": {
+        "title": "Import time",
+        "data": {
+          "import_hour": "Import hour",
+          "import_minute": "Import minute"
+        },
+        "data_description": {
+          "import_hour": "Local time (Europe/Prague), 0–23.",
+          "import_minute": "0–59."
+        }
+      },
+      "metering_points": {
+        "title": "Metering points",
+        "description": "Select which metering points (EANs) should be imported. A newly added one only starts importing from now on — use the retry button once a day's data becomes available for backfill.",
+        "data": {
+          "eans": "Metering points"
+        }
+      }
+    },
+    "error": {
+      "no_eans_selected": "Select at least one metering point."
+    },
+    "abort": {
+      "invalid_auth": "Invalid username or password.",
+      "cannot_connect": "Could not connect to the PREdistribuce portal."
+    }
+  },
+  "entity": {
+    "button": {
+      "retry_pending": {
+        "name": "Retry download"
+      }
+    }
+  }
+}
