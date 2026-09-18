@@ -3,6 +3,7 @@
   "name": "PREdistribuce",
   "codeowners": ["@hondzik"],
   "config_flow": true,
+  "dependencies": ["recorder"],
   "documentation": "https://github.com/hondzik/predistribuce-consumption-profiles",
   "integration_type": "hub",
   "iot_class": "cloud_polling",
