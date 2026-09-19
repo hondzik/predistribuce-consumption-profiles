@@ -24,6 +24,7 @@ jobs:
       - uses: hacs/action@main
         with:
           category: integration
+          ignore: "archived brands"
 
   python:
     name: Python syntax / imports
