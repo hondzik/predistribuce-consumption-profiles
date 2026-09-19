@@ -1,10 +1,10 @@
 [tool.pytest.ini_options]
-pythonpath = ["custom_components/predistribuce"]
+pythonpath = ["custom_components/predistribuce", "."]
 testpaths = ["tests"]
 asyncio_mode = "auto"
 
 [tool.coverage.run]
-source = ["pre_api"]
+include = ["**/pre_api.py"]
 
 [tool.coverage.report]
 show_missing = true

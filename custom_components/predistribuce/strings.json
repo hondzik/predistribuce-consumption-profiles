@@ -85,12 +85,11 @@
   "issues": {
     "pending_data": {
       "title": "PREdistribuce: missing data",
-      "description": "The distributor does not have data yet for these days:\n\n{lines}\n\nClick Fix to try downloading them again, or wait for the next scheduled run.",
       "fix_flow": {
         "step": {
           "confirm": {
             "title": "Retry download",
-            "description": "Try downloading the missing days again now. If the distributor still has not closed them, the issue will stay open."
+            "description": "The distributor does not have data yet for these days:\n\n{lines}\n\nClick Submit to try downloading them again now. If the distributor still has not closed them, the issue will stay open."
           }
         },
         "abort": {

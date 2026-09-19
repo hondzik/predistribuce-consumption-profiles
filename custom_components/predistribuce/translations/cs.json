@@ -85,12 +85,11 @@
   "issues": {
     "pending_data": {
       "title": "PREdistribuce: chybějící data",
-      "description": "Distributor ještě nemá k dispozici data za tyto dny:\n\n{lines}\n\nKlikněte na Oprava a zkuste stažení znovu, nebo počkejte na příští naplánovaný běh.",
       "fix_flow": {
         "step": {
           "confirm": {
             "title": "Zkusit znovu stáhnout data",
-            "description": "Zkusí teď znovu stáhnout chybějící dny. Pokud je distributor ještě nemá uzavřené, issue zůstane otevřená."
+            "description": "Distributor ještě nemá k dispozici data za tyto dny:\n\n{lines}\n\nOdeslat zkusí teď znovu stáhnout chybějící dny. Pokud je distributor ještě nemá uzavřené, issue zůstane otevřená."
           }
         },
         "abort": {

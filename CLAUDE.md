@@ -430,8 +430,63 @@ Testováno přes `pytest-homeassistant-custom-component`
   přes `pip3 install --user --break-system-packages` (Debian/Ubuntu
   PEP 668 `externally-managed-environment` odmítá plain `pip install
   --user`). V CI (`ubuntu-latest`) toto omezení neplatí, běží bez úprav.
-- Celkem `pytest tests/` → 67 testů (38 `pre_api` + 15 `config_flow` +
-  4 `repairs` + 10 `coordinator`), všechny zelené.
+- Celkem `pytest tests/` → 68 testů (38 `pre_api` + 15 `config_flow` +
+  5 `repairs` + 10 `coordinator`), všechny zelené.
+
+### Opravy nalezené z reálného CI běhu (`2026-09-19`)
+
+Po prvním pushu selhaly dvě CI joby na věcech, které lokální WSL běh
+(`python3 -m pytest`) neodhalil:
+
+- **`tests` job: `ModuleNotFoundError: No module named 'custom_components'`**
+  jen v CI, jen v `test_config_flow.py`/`test_coordinator.py`/
+  `test_repairs.py`. Příčina: `python -m pytest` si automaticky přidá
+  aktuální adresář na `sys.path`, ale instalovaný `pytest` konzolový
+  skript (co CI/`pyproject.toml`'s `pythonpath` řeší jinak) to nedělá.
+  Oprava: `pythonpath` v `pyproject.toml` musí obsahovat i `"."` (kořen
+  repa, kde leží balíček `custom_components`), ne jen
+  `"custom_components/predistribuce"` (pro bare `import pre_api` v
+  `test_pre_api.py`). Ověřeno přímým voláním `~/.local/bin/pytest --cov
+  ...` (bez `python -m`) v WSL — přesně reprodukuje chování CI.
+- **Vedlejší regrese, kterou tato oprava způsobila:** `pytest --cov`
+  začal hlásit `CoverageWarning: Module pre_api was previously imported,
+  but not measured` a `No data was collected` — coverage report pro
+  `pre_api.py` byl prázdný místo ~90 %. Příčina: se `"."` na
+  `pythonpath` existují teď DVĚ různé importované instance stejného
+  souboru pod různými jmény modulu — bare `pre_api` (přes
+  `test_pre_api.py`) a balíčkové `custom_components.predistribuce.
+  pre_api` (přes `config_flow.py`/`coordinator.py`'s `from . import
+  pre_api`, zavlečené do `sys.modules` dřív, když se sbírají ostatní
+  testovací soubory). `[tool.coverage.run] source = ["pre_api"]` matchuje
+  podle JMÉNA modulu v `sys.modules` — a to zůstává „prázdné", protože se
+  fyzicky nikdy neprovede pod tímto přesným jménem znovu. Oprava: matchovat
+  podle cesty k souboru, ne podle jména modulu —
+  `[tool.coverage.run] include = ["**/pre_api.py"]` místo `source =
+  ["pre_api"]`. Ověřeno: `90%` coverage zpátky (`300-316, 320` missing,
+  stejně jako dřív).
+- **`hassfest` job: `Invalid strings.json: two or more values in the
+  same group of exclusion 'fixable' at 'issues.pending_data.<fixable>'`.**
+  Příčina (ověřeno přes zdroj `script/hassfest/translations.py` v HA
+  core repu): `issues.<id>.description` a `issues.<id>.fix_flow` jsou
+  `voluptuous.Exclusive` ve stejné skupině `"fixable"` — fixable issue
+  (má `fix_flow`) NESMÍ mít navíc top-level `description`. `strings.json`
+  i `translations/cs.json` mělo oboje. Oprava: text popisu (s
+  `{lines}` placeholderem) se přesunul z top-level `description` do
+  `fix_flow.step.confirm.description` (odpovídá reálnému vzoru v HA core,
+  např. `shelly`'s `strings.json`).
+  - **Návazná oprava (jinak by placeholder zůstal nedosazený):**
+    `RepairsFlow` nedosazuje `translation_placeholders` z issue
+    automaticky — `repairs.py`'s `async_step_confirm` teď explicitně
+    dohledá issue přes `ir.async_get(self.hass).async_get_issue(
+    self.handler, self.issue_id)` a jeho `translation_placeholders` pošle
+    jako `description_placeholders` do `async_show_form` (stejný vzor
+    jako HA core's `ConfirmRepairFlow.async_step_confirm`). Bez `self.hass`/
+    `self.handler`/`self.issue_id` nastavených (ty za běhu nastavuje
+    `RepairsFlowManager`, ne konstruktor) musí testy, které volají
+    `PendingDataRepairFlow` přímo bez manageru, tyto atributy nastavit
+    ručně — přidán test `test_confirm_form_uses_issue_translation_
+    placeholders` s reálným `hass`/`ir.async_create_issue`, který ověří,
+    že se placeholder skutečně dosadí.
 
 ## Poznámky
 
