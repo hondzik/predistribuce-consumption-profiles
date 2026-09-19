@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.0.3](https://github.com/hondzik/predistribuce-consumption-profiles/compare/v0.0.2...v0.0.3) (2026-09-19)
+
+
+### Features
+
+* add repairs flow for handling pending data issues ([7bc93a9](https://github.com/hondzik/predistribuce-consumption-profiles/commit/7bc93a93eb6894ecf97deec7153ec6ca7a39a80c))
+* enhance PendingDataRepairFlow to utilize issue translation placeholders and update related tests ([0a58094](https://github.com/hondzik/predistribuce-consumption-profiles/commit/0a5809408244632492df3ea150678215f5196b1c))
+* update HACS action to ignore archived brands ([8569775](https://github.com/hondzik/predistribuce-consumption-profiles/commit/8569775e9130167c29029777964bca11c39c92d3))
+* update Home Assistant compatibility to 2026.9.0 ([7bc93a9](https://github.com/hondzik/predistribuce-consumption-profiles/commit/7bc93a93eb6894ecf97deec7153ec6ca7a39a80c))
+
 ## [0.0.2](https://github.com/hondzik/predistribuce-consumption-profiles/compare/v0.0.1...v0.0.2) (2026-09-18)
 
 
