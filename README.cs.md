@@ -93,11 +93,11 @@ PREdistribuce nikde nepublikuje pevný čas, kdy jsou data o spotřebě za daný
 
 - Nikdy nežádá data za dnešní den, jen za dny striktně v minulosti.
 - Den, jehož sloupec spotřeby je *celý nulový*, považuje za „ještě neuzavřený" (namísto naimportování nul) a zapamatuje si ho.
-- Vyvolá trvalé oznámení (Nastavení → Oznámení) s výpisem toho, co chybí.
-- Na stránce zařízení integrace se objeví tlačítko **„Zkusit znovu stáhnout data"**, které na vyžádání znovu zkusí stáhnout všechny chybějící dny/EANy; po úspěchu se oznámení automaticky zruší. Další naplánovaný denní běh to zkusí také automaticky.
+- Vytvoří **repair issue** („PREdistribuce: chybějící data"), zobrazenou jako odznak v Nastavení a v přehledu Nastavení → Systém → Opravy, s popisem, které EAN/den chybí.
+- Repair issue je opravitelná: kliknutím na **Opravit** se na vyžádání znovu zkusí stáhnout všechny chybějící dny/EANy. Pokud distributor den pořád nemá uzavřený, issue zůstane otevřená; jakmile se stažení podaří, automaticky zmizí. Další naplánovaný denní běh to zkusí také automaticky, nezávisle na repair issue.
 
-![Trvalé oznámení a tlačítko pro opakování](docs/images/pending-notification.png)
-*(placeholder — screenshot oznámení + tlačítka pro opakování)*
+![Repair issue s chybějícími daty](docs/images/pending-notification.png)
+*(placeholder — screenshot repair issue)*
 
 ## Známá omezení
 

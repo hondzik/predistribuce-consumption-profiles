@@ -5,9 +5,9 @@ Vyžaduje běžící Home Assistant (importuje `homeassistant.*`) — na rozdíl
 
 Denní běh stahuje jen "včerejšek" (nikdy dnešek — spotřeba za dnešek je
 vždy nulová, viz CLAUDE.md). `async_import_range` je zároveň veřejná metoda
-pro manuální/historický (re)import libovolného rozsahu (tlačítko v UI) —
-oba případy jdou přes stejnou logiku, aby počítání běžícího `sum` bylo
-vždy konzistentní.
+pro manuální/historický (re)import libovolného rozsahu (volá ji i repair
+flow v `repairs.py`) — oba případy jdou přes stejnou logiku, aby počítání
+běžícího `sum` bylo vždy konzistentní.
 """
 
 from __future__ import annotations
@@ -18,7 +18,7 @@ from zoneinfo import ZoneInfo
 
 import requests
 
-from homeassistant.components import persistent_notification
+from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.models import StatisticData, StatisticMetaData
 from homeassistant.components.recorder.statistics import (
     async_add_external_statistics,
@@ -27,6 +27,7 @@ from homeassistant.components.recorder.statistics import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.event import async_track_time_change
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -122,12 +123,21 @@ class PreDistribuceCoordinator(DataUpdateCoordinator[None]):
         _LOGGER.info("%s: naimportováno %d hodinových záznamů", ean, len(stats))
         return len(stats)
 
+    @property
+    def has_pending(self) -> bool:
+        """True, pokud aspoň jeden EAN čeká na uzavření dne u distributora."""
+        return bool(self._pending)
+
+    @property
+    def _issue_id(self) -> str:
+        return f"pending_data_{self.entry.entry_id}"
+
     async def async_retry_pending(self) -> int:
-        """Zkusí znovu doimportovat dny čekající na uzavření (tlačítko v UI).
+        """Zkusí znovu doimportovat dny čekající na uzavření (repair issue).
 
         Volá se pro každý EAN, který má v `_pending` uložený den — dotáhne
         rozsah od toho dne po nejnovější dostupný ("včerejšek"). Pokud den
-        pořád není uzavřený, `_pending`/notifikace zůstane beze změny.
+        pořád není uzavřený, `_pending`/issue zůstane beze změny.
         """
         total = 0
         for ean, pending_since in list(self._pending.items()):
@@ -136,32 +146,31 @@ class PreDistribuceCoordinator(DataUpdateCoordinator[None]):
         return total
 
     def _notify_pending(self) -> None:
-        """Vytvoří/aktualizuje nebo zruší notifikaci o dnech čekajících na data."""
-        notification_id = f"{DOMAIN}_{self.entry.entry_id}_pending"
+        """Vytvoří/aktualizuje nebo zruší repair issue o dnech čekajících na data."""
         if not self._pending:
-            persistent_notification.async_dismiss(self.hass, notification_id)
+            ir.async_delete_issue(self.hass, DOMAIN, self._issue_id)
             return
 
         lines = "\n".join(
             f"- EAN {ean}: od {den.strftime('%d.%m.%Y')}"
             for ean, den in sorted(self._pending.items())
         )
-        persistent_notification.async_create(
+        ir.async_create_issue(
             self.hass,
-            (
-                "Distributor ještě nemá k dispozici data za tyto dny:\n\n"
-                f"{lines}\n\n"
-                "Zkuste to znovu později tlačítkem „Zkusit znovu stáhnout data"
-                " (na stránce zařízení této integrace), nebo počkejte na"
-                " příští naplánovaný běh."
-            ),
-            title="PREdistribuce: chybějící data",
-            notification_id=notification_id,
+            DOMAIN,
+            self._issue_id,
+            is_fixable=True,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="pending_data",
+            translation_placeholders={"lines": lines},
+            data={"entry_id": self.entry.entry_id},
         )
 
     async def _async_get_baseline_sum(self, statistic_id: str) -> float:
         """Vrátí poslední známý `sum` pro danou statistiku, nebo 0 pro první import."""
-        last = await get_last_statistics(self.hass, 1, statistic_id, True, {"sum"})
+        last = await get_instance(self.hass).async_add_executor_job(
+            get_last_statistics, self.hass, 1, statistic_id, True, {"sum"}
+        )
         rows = last.get(statistic_id)
         if not rows:
             return 0.0

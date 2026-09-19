@@ -210,12 +210,15 @@ Přihlašovací údaje **nikdy do tohoto souboru** — přes env proměnné
      th/td, "label: hodnota"), ale žádný nebyl ověřen proti reálné
      stránce. Když nesedí, degraduje na zobrazení jen EAN (funkčně OK,
      jen bez popisku). Ověřit živě při prvním testu config_flow.
-   - **Budoucí tlačítko pro manuální import historických dat** (zmíněné
-     dřív v konverzaci, ještě nenapsané) musí umožnit vybrat KONKRÉTNÍ
-     odběrné místo/EAN (a rozsah dat) — na rozdíl od `button.py`
-     (`async_retry_pending`), který jede přes všechny EANy v `_pending`
-     najednou. Nepřidávat EAN-selektor do stávajícího retry-tlačítka,
-     je to jiný use-case (plánovaný reimport vs. ruční historický import).
+   - **Budoucí ovládací prvek pro manuální import historických dat**
+     (zmíněné dřív v konverzaci, ještě nenapsané) musí umožnit vybrat
+     KONKRÉTNÍ odběrné místo/EAN (a rozsah dat) — na rozdíl od
+     `coordinator.async_retry_pending()` (volané z repair-flow issue
+     `pending_data`, viz `repairs.py`/sekce „Cílová architektura"), který
+     jede přes všechny EANy v `_pending` najednou a nemá žádný výběr
+     rozsahu. Je to jiný use-case (plánovaný reimport pořád čekajících
+     dnů vs. ruční historický import) — řešit zvlášť, nepřetěžovat tím
+     repair flow.
 9. ~~`strings.json` + `translations/cs.json`~~ — HOTOVO (anglicky jako
    zdroj/fallback v `strings.json`, česky v `translations/cs.json`;
    `button.py` teď používá `_attr_translation_key = "retry_pending"`
@@ -284,15 +287,30 @@ Přihlašovací údaje **nikdy do tohoto souboru** — přes env proměnné
 - `coordinator.py` — `DataUpdateCoordinator`, běh 1× denně v čase, který si
   uživatel nastaví v config entry (options); `async_import_range()` jako
   sdílená metoda pro denní běh i manuální (re)import.
-- **Chybějící/neuzavřená data:** pokud `async_import_range` narazí na den
-  s celou nulovou spotřebou, NEhlásí chybu — zapamatuje si ho v
-  `coordinator._pending[ean]` a vytvoří `persistent_notification`
-  (Nastavení → Notifikace) s výpisem, co chybí. `persistent_notification`
-  neumí klikací tlačítko uvnitř sebe (to jen přes HA Companion actionable
-  notifications, které v tomto projektu nepoužíváme) — proto je navíc
-  entita `button.py` „Zkusit znovu stáhnout data" na stránce zařízení
-  integrace, která zavolá `coordinator.async_retry_pending()`. Po úspěchu
-  se notifikace automaticky zruší (`persistent_notification.async_dismiss`).
+- **Chybějící/neuzavřená data (`2026-09-19`, přepracováno):** pokud
+  `async_import_range` narazí na den s celou nulovou spotřebou, NEhlásí
+  chybu — zapamatuje si ho v `coordinator._pending[ean]` a přes
+  `homeassistant.helpers.issue_registry` vytvoří **repair issue**
+  (`is_fixable=True`, `translation_key="pending_data"`), viditelné jako
+  odznak v Nastavení a v Nastavení → Systém → Opravy. Fix flow
+  (`repairs.py`, `PendingDataRepairFlow`) je jednoduchý potvrzovací
+  dialog, který po kliknutí zavolá `coordinator.async_retry_pending()`
+  přímo — samotná notifikace/oprava je zároveň tlačítkem k akci, žádná
+  samostatná entita není potřeba (`entry.runtime_data` → coordinator se
+  dohledá přes `data={"entry_id": ...}` uložené při vytvoření issue).
+  Issue se maže/vytváří znovu v `coordinator._notify_pending()` podle
+  aktuálního `_pending`. **Záludnost:** repairs manager v HA core po
+  dokončení fix flow s `async_create_entry` automaticky maže issue podle
+  `issue_id` — pokud by flow vždycky vracel `create_entry`, smazalo by to
+  i issue, který `_notify_pending` uvnitř `async_retry_pending()` čerstvě
+  vytvořil znovu (den pořád není uzavřený). Proto flow po zavolání
+  `async_retry_pending()` kontroluje `coordinator.has_pending` a když
+  pořád něco chybí, vrací `async_abort(reason="still_pending")` místo
+  `create_entry` — jen tak issue zůstane otevřená.
+  Dřívější varianta (`persistent_notification` + trvalá entita
+  `button.py` „Zkusit znovu stáhnout data") byla **zrušena** — `button.py`
+  smazán, `PLATFORMS`/forwarding v `__init__.py` odstraněny (integrace
+  teď nemá žádnou entity platformu).
 - import přes `async_add_external_statistics` (historická data nelze cpát
   přes běžný senzor), hodinová UTC agregace, kumulativní `sum`
 - **backfill/reimport `sum`:** `async_add_external_statistics` dělá upsert
@@ -319,6 +337,101 @@ Přihlašovací údaje **nikdy do tohoto souboru** — přes env proměnné
   Termín „metering point" (odběrné místo) zůstává jen jako UI slovník
   (např. popisky v `config_flow.py`), ne jako název repa.
 - inspirace: https://github.com/igracek/HACS_CEZD_PND (totéž pro ČEZ PND)
+
+## Testy (`2026-09-19`, nastaveno)
+
+- `pytest` + `pytest-cov` + `requests-mock` (`requirements-test.txt`), config v
+  `pyproject.toml` (`[tool.pytest.ini_options]`). `pythonpath =
+  ["custom_components/predistribuce"]` — testy importují `pre_api` jako
+  samostatný top-level modul (`import pre_api`), NE přes
+  `custom_components.predistribuce.pre_api`, protože balíčkový
+  `__init__.py` importuje `coordinator.py` → `homeassistant.*`, což
+  bez běžícího HA/`pytest-homeassistant-custom-component` selže.
+- `tests/test_pre_api.py` — 38 testů, jen `pre_api.py` (jediný modul
+  testovatelný bez HA), síťové volání mockováno přes `requests_mock`
+  fixture. Pokrývá `parse_csv`/`_parse_decimal` (desetinná čárka,
+  prázdná vs. nulová hodnota, krátké/prázdné řádky), `_is_ean_selected`
+  (obě pořadí atributů `name`/`value`), `_extract_label_value` (dt/dd,
+  th/td, "label: hodnota", chybějící label), `login`
+  (úspěch/`LoginError`/HTTP chyba), `fetch_report_csv` (podmíněné
+  volání `_select_ean` podle stavu checkboxu), `_set_report_range`
+  (chybějící `exportCSVForm` → `RuntimeError`, `PRE_DEBUG_DUMP` dump),
+  `list_metering_points` (EAN + adresa, prázdný účet, výpadek detailní
+  stránky) a `main()` (jen validace vstupů — chybějící env/`--ean`,
+  bez síťového volání). Coverage 90 % (`pytest --cov --cov-report=
+  term-missing`) — nepokryté zbývají jen řádky `main()`, které dělají
+  reálné síťové volání (login+fetch+print), a `if __name__ ==
+  "__main__"` guard.
+- CI: nová job `tests` v `.github/workflows/validate.yml`, běží
+  vedle `hassfest`/`hacs`/`compileall`.
+
+### `config_flow.py` / `coordinator.py` / `repairs.py` — HOTOVO (`2026-09-19`)
+
+Testováno přes `pytest-homeassistant-custom-component`
+(`requirements-test.txt`), která importuje integraci jako běžný balíček
+`custom_components.predistribuce` skrz skutečný HA loader/`ConfigEntry`
+(na rozdíl od `pre_api.py` výše, který jede bez HA vůbec).
+
+- `tests/conftest.py`: `pytest_plugins = "pytest_homeassistant_custom_
+  component"` + jeden autouse fixture `auto_ha_fixtures(recorder_mock,
+  enable_custom_integrations)`. **Pořadí parametrů je důležité** —
+  `recorder_mock` musí být první: interně přes `recorder_db_url`
+  kontroluje, že `hass` fixture ještě neběžela (jinak `AssertionError:
+  assert not [True]`). Kdyby `enable_custom_integrations` (závisí na
+  `hass`) byla ve vlastním samostatném autouse fixture, `hass` by se
+  inicializovala dřív a `recorder_mock` by pak spadl — musí to být jeden
+  fixture, v tomto pořadí. `recorder_mock` je nutná i pro `config_flow`
+  testy, které se statistikami vůbec nepracují — `manifest.json` má
+  `dependencies: ["recorder"]`, takže HA loader recorder nastaví při
+  načtení domény `predistribuce` vždy, jinak spadne na `DependencyError`.
+- `pyproject.toml`: `asyncio_mode = "auto"` — `pytest-homeassistant-
+  custom-component` 0.13.x vyžaduje přesně `pytest-asyncio==1.4.0`
+  (pin v jeho `METADATA`), a ten bez `asyncio_mode = "auto"` shazuje
+  všechny `async def test_*` na `PytestRemovedIn9Warning` (async fixture
+  bez asyncio markeru).
+- `tests/test_config_flow.py` — 15 testů. Mimo jiné **regresní test**
+  `test_options_init_shows_menu` přesně na bug opravený týž den (viz výše
+  v `Cílová architektura` k `PreDistribuceOptionsFlow.__init__`) — options
+  flow se musí otevřít bez 500 chyby. Kryje `async_step_user`/`async_step_
+  eans` (happy path, `invalid_auth`, `cannot_connect`, `no_eans_found`,
+  `no_eans_selected`), duplicate-account `already_configured`, reauth
+  (`async_step_reauth_confirm` úspěch/`invalid_auth`) a celé options menu
+  (`schedule`, `metering_points` + jeho error cesty).
+- `tests/test_repairs.py` — 4 testy nad `PendingDataRepairFlow` s falešným
+  coordinatorem (`FakeCoordinator`, ne reálný `PreDistribuceCoordinator` —
+  flow na `hass`/recorderu nezávisí). Kryje i `still_pending` abort-vs-
+  create_entry logiku (viz docstring v `repairs.py`).
+- `tests/test_coordinator.py` — 10 testů. `_aggregate_hourly` (čistá
+  funkce) testováno bez `hass` na sumaci čtvrthodin do hodiny, detekci
+  neuzavřeného dne (celá spotřeba 0) a přeskočení dnů za ním; `None`
+  spotřeba se počítá jako 0. `async_import_range`/`async_retry_pending`
+  testováno s reálnou `hass`/`MockConfigEntry`, ale `get_last_statistics`/
+  `async_add_external_statistics` jsou mockované na úrovni modulu (reálný
+  zápis do recorderu by přidal timing komplikace okolo flush workeru,
+  a to není to, co je tu potřeba ověřit) — kryje running `sum` navazující
+  na baseline, clamping `date_to` na "včerejšek", vznik/zánik repair issue
+  přes `ir.async_get(hass).async_get_issue(...)`.
+  - **Gotcha:** konstruktor coordinatoru registruje reálný
+    `async_track_time_change` (denní plán) — bez patchnutí na no-op by po
+    testu zůstal viset neuklizený timer (`entry.async_on_unload` se
+    spustí až při unloadu entry, který se v těchto testech nevolá) a
+    `pytest-homeassistant-custom-component` shodí test na "Lingering
+    timer after test". `_make_coordinator()` helper proto vytváří
+    coordinator uvnitř `patch(".coordinator.async_track_time_change",
+    return_value=lambda: None)`.
+  - Rozlišení duplicitní místní hodiny při přechodu na zimní čas (`fold`
+    v `_aggregate_hourly`) NENÍ testováno — stejně jako v `CLAUDE.md`
+    bodu 6, zůstává neověřené až do `25.10.2026`.
+- **Windows/WSL:** `homeassistant.runner` importuje na modulové úrovni
+  `fcntl` (POSIX-only) → tyto testy vůbec nejdou sesbírat/spustit na
+  nativním Windows Pythonu (import selže dřív, než se stihne cokoliv
+  testovat). Lokálně nutné přes WSL (`wsl -d Ubuntu -e bash -lc
+  '...pytest...'`), balíčky instalované do uživatelského site-packages
+  přes `pip3 install --user --break-system-packages` (Debian/Ubuntu
+  PEP 668 `externally-managed-environment` odmítá plain `pip install
+  --user`). V CI (`ubuntu-latest`) toto omezení neplatí, běží bez úprav.
+- Celkem `pytest tests/` → 67 testů (38 `pre_api` + 15 `config_flow` +
+  4 `repairs` + 10 `coordinator`), všechny zelené.
 
 ## Poznámky
 

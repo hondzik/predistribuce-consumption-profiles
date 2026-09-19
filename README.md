@@ -97,11 +97,11 @@ PREdistribuce doesn't publish a fixed time at which a day's consumption data bec
 
 - Never requests today's data, only full days strictly in the past.
 - Treats a day whose consumption column is *entirely zero* as "not closed yet" instead of importing zeros, and remembers it.
-- Raises a persistent notification (Settings → Notifications) listing what's pending.
-- Adds a **"Retry download"** button on the integration's device page to re-attempt every pending day/EAN on demand; on success the notification is dismissed automatically. The next scheduled daily run will also retry automatically.
+- Raises a **repair issue** ("PREdistribuce: missing data"), shown as a badge in Settings and listed under Settings → System → Repairs, describing which EAN/day is pending.
+- The repair issue is fixable: clicking **Fix** re-attempts every pending day/EAN on demand. If the distributor still hasn't closed the day, the issue stays open; once the retry succeeds it's dismissed automatically. The next scheduled daily run will also retry automatically, independently of the repair issue.
 
-![Persistent notification and retry button](docs/images/pending-notification.png)
-*(placeholder — notification + retry button screenshot)*
+![Repair issue for missing data](docs/images/pending-notification.png)
+*(placeholder — repair issue screenshot)*
 
 ## Known limitations
 

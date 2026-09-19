@@ -4,3 +4,7 @@ work/
 .claude/
 .mcp.json
 CLAUDE.md
+.pytest_cache/
+.coverage
+htmlcov/
+.venv*/

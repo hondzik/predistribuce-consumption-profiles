@@ -35,3 +35,14 @@ jobs:
           python-version: "3.14"
       - run: pip install requests
       - run: python -m compileall -q custom_components/predistribuce
+
+  tests:
+    name: Unit tests (pytest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+      - run: pip install requests -r requirements-test.txt
+      - run: pytest --cov --cov-report=term-missing

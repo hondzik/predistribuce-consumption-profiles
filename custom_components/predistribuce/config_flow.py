@@ -223,7 +223,7 @@ class PreDistribuceConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def async_get_options_flow(
         config_entry: config_entries.ConfigEntry,
     ) -> "PreDistribuceOptionsFlow":
-        return PreDistribuceOptionsFlow(config_entry)
+        return PreDistribuceOptionsFlow()
 
 
 class PreDistribuceOptionsFlow(config_entries.OptionsFlow):
@@ -231,10 +231,14 @@ class PreDistribuceOptionsFlow(config_entries.OptionsFlow):
 
     Přihlašovací údaje jsou už uložené v `config_entry.data` — pro přidání
     odběrného místa se znovu použijí, uživatel je nezadává podruhé.
+
+    Pozn.: `self.config_entry` se NEnastavuje v `__init__` — novější HA
+    (breaking change, config_entry teď dodává base třída/flow manager
+    automaticky) by na explicitní nastavení shodilo options flow s
+    500 Internal Server Error při otevření.
     """
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        self.config_entry = config_entry
+    def __init__(self) -> None:
         self._available_points: list[pre_api.MeteringPoint] | None = None
 
     async def async_step_init(

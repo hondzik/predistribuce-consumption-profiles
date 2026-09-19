@@ -68,7 +68,7 @@
       },
       "metering_points": {
         "title": "Odběrná místa",
-        "description": "Vyberte, která odběrná místa (EANy) se mají importovat. Nově přidané se začne importovat až od teď — pro dřívější data použijte po jejich uzavření tlačítko pro opakované stažení.",
+        "description": "Vyberte, která odběrná místa (EANy) se mají importovat. Nově přidané se začne importovat až od teď — pro dřívější data po jejich uzavření nabídne doplnění repair issue v Nastavení.",
         "data": {
           "eans": "Odběrná místa"
         }
@@ -82,10 +82,20 @@
       "cannot_connect": "Nepodařilo se připojit k portálu PREdistribuce."
     }
   },
-  "entity": {
-    "button": {
-      "retry_pending": {
-        "name": "Zkusit znovu stáhnout data"
+  "issues": {
+    "pending_data": {
+      "title": "PREdistribuce: chybějící data",
+      "description": "Distributor ještě nemá k dispozici data za tyto dny:\n\n{lines}\n\nKlikněte na Oprava a zkuste stažení znovu, nebo počkejte na příští naplánovaný běh.",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Zkusit znovu stáhnout data",
+            "description": "Zkusí teď znovu stáhnout chybějící dny. Pokud je distributor ještě nemá uzavřené, issue zůstane otevřená."
+          }
+        },
+        "abort": {
+          "still_pending": "Distributor pořád ještě nemá data za tyto dny k dispozici. Zkuste to znovu později, nebo počkejte na příští naplánovaný běh."
+        }
       }
     }
   }
