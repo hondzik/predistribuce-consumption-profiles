@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.5](https://github.com/hondzik/predistribuce-consumption-profiles/compare/v0.0.4...v0.0.5) (2026-09-20)
+
+
+### Features
+
+* update HACS action and manifest for consistency in naming and integration type ([3fd71e5](https://github.com/hondzik/predistribuce-consumption-profiles/commit/3fd71e5930cc0ed372afee299ec9e5f21cdc327a))
+
 ## [0.0.4](https://github.com/hondzik/predistribuce-consumption-profiles/compare/v0.0.3...v0.0.4) (2026-09-19)
 
 
