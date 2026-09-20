@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.9](https://github.com/hondzik/predistribuce-consumption-profiles/compare/v0.0.8...v0.0.9) (2026-09-20)
+
+
+### Features
+
+* add manual historical data import service and UI integration ([3e779d1](https://github.com/hondzik/predistribuce-consumption-profiles/commit/3e779d1b887c1c5b47fe546b756087f85c7ebaf7))
+
 ## [0.0.8](https://github.com/hondzik/predistribuce-consumption-profiles/compare/v0.0.7...v0.0.8) (2026-09-20)
 
 
