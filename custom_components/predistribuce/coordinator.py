@@ -30,7 +30,7 @@ from homeassistant.components.recorder.statistics import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.event import async_track_time_change
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -249,15 +249,24 @@ class PreDistribuceCoordinator(DataUpdateCoordinator[None]):
             pre_api.login(
                 session, self.entry.data["username"], self.entry.data["password"]
             )
+            raw = pre_api.fetch_report_csv(
+                session,
+                ean,
+                date_from.strftime("%d.%m.%Y"),
+                date_to.strftime("%d.%m.%Y"),
+            )
         except pre_api.LoginError as err:
             raise ConfigEntryAuthFailed(str(err)) from err
-
-        raw = pre_api.fetch_report_csv(
-            session,
-            ean,
-            date_from.strftime("%d.%m.%Y"),
-            date_to.strftime("%d.%m.%Y"),
-        )
+        except requests.exceptions.RequestException as err:
+            # Bez tohohle by síťová chyba (výpadek portálu, timeout) proletěla
+            # jako nezachycená requests výjimka až do frontendu (options-flow
+            # krok/service) jako "unknown error" bez smysluplné zprávy
+            # (ověřeno živě 2026-09-20, viz CLAUDE.md).
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={"error": str(err)},
+            ) from err
         return pre_api.parse_csv(raw)
 
 

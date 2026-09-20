@@ -9,8 +9,7 @@
 
 A Home Assistant custom integration that logs into the [PREdistribuce](https://www.predistribuce.cz/) customer portal (the electricity distributor for Prague, Czech Republic), downloads your smart meter's 15-minute consumption profile for the previous day, and imports it into Home Assistant as long-term **external statistics** — so it shows up in the **Energy dashboard** just like a native energy sensor.
 
-![Energy dashboard with imported PREdistribuce consumption](docs/images/energy-dashboard.png)
-*(placeholder  — screenshot of the Energy dashboard showing imported consumption)*
+![Energy dashboard with imported PREdistribuce consumption](docs/images/energy.png)
 
 ## Table of contents
 
@@ -23,6 +22,7 @@ A Home Assistant custom integration that logs into the [PREdistribuce](https://w
     - [Manual](#manual)
   - [Configuration](#configuration)
     - [Initial setup](#initial-setup)
+    - [Adding the statistic to the Energy dashboard](#adding-the-statistic-to-the-energy-dashboard)
     - [Adding another metering point later](#adding-another-metering-point-later)
     - [Changing the import schedule](#changing-the-import-schedule)
     - [Manually importing historical data](#manually-importing-historical-data)
@@ -42,9 +42,6 @@ Once a day, at a time you choose, the integration:
 1. Logs in and downloads yesterday's 15-minute consumption values for each configured metering point (EAN).
 2. Aggregates them into hourly totals and pushes them into Home Assistant's statistics database via `async_add_external_statistics`, so they appear as a long-term statistic (`predistribuce:<EAN>_consumption`) that the Energy dashboard can use as a grid consumption source.
 3. If the portal hasn't finished closing out the requested day yet (consumption is still all-zero), the day is skipped and remembered — see [Missing / not-yet-closed days](#missing--not-yet-closed-days).
-
-![Data flow: portal login → CSV export → statistics import](docs/images/data-flow-overview.png)
-*(placeholder — simple diagram of portal → integration → Energy dashboard)*
 
 ## Requirements
 
@@ -70,31 +67,41 @@ Configuration is done entirely through the Home Assistant UI (Settings → Devic
 ### Initial setup
 
 1. Enter your PREdistribuce portal username/e-mail and password.
-
-   ![Config flow — login step](docs/images/config-flow-login.png)
-   *(placeholder — login step screenshot)*
-
 2. Pick which metering point(s) to import, and the time of day the daily import should run.
 
-   ![Config flow — metering points and schedule step](docs/images/config-flow-eans.png)
-   *(placeholder — metering point selection + schedule step screenshot)*
+Your credentials are stored the standard Home Assistant way (inside the config entry, like any other cloud-polling integration) — nothing is written anywhere else. Once set up, the integration shows up under Settings → Devices & Services:
 
-Your credentials are stored the standard Home Assistant way (inside the config entry, like any other cloud-polling integration) — nothing is written anywhere else.
+![Installed PREdistribuce integration](docs/images/integration-main.png)
+
+### Adding the statistic to the Energy dashboard
+
+Add the `predistribuce:<EAN>_consumption` statistic as a grid consumption source under Settings → Dashboards → Energy → Electricity grid:
+
+![Energy dashboard settings — electricity grid](docs/images/energy-electricity-grid.png)
+
+![Configuring a grid connection with the PREdistribuce statistic](docs/images/energy-grid-connection.png)
+
+Further options for an already-configured account are available via the integration's **Configure** button:
+
+![Integration options menu](docs/images/settings-main.png)
 
 ### Adding another metering point later
 
-Open the integration's **Configure** options, choose **Metering points**, and select any additional EAN(s) on the account. Your saved password is reused automatically — you won't be asked for it again.
+Choose **Add a metering point**, and select any additional EAN(s) on the account. Your saved password is reused automatically — you won't be asked for it again.
 
-![Options flow — add metering point](docs/images/options-metering-points.png)
-*(placeholder — options flow "metering points" step screenshot)*
+![Options flow — add metering point](docs/images/settings-metering-points.png)
 
 ### Changing the import schedule
 
-Open the integration's **Configure** options and choose **Schedule** to change the hour/minute the daily import runs at.
+Choose **Change import time** to change the hour/minute the daily import runs at.
+
+![Options flow — change import time](docs/images/settings-import-time.png)
 
 ### Manually importing historical data
 
-To (re)download a specific date range for a specific metering point — for example to backfill data from before the integration was set up, or to force a retry outside the daily schedule — open the integration's **Configure** options and choose **Import historical data**. Pick the metering point and the from/to dates and submit; the result tells you how many hourly records were imported (0 usually means the distributor hasn't closed out the requested day(s) yet).
+To (re)download a specific date range for a specific metering point — for example to backfill data from before the integration was set up, or to force a retry outside the daily schedule — choose **Import historical data**. Pick the metering point and the from/to dates and submit; the result tells you how many hourly records were imported (0 usually means the distributor hasn't closed out the requested day(s) yet).
+
+![Options flow — import historical data](docs/images/settings-historical-data.png)
 
 The same operation is also available as the Home Assistant action/service `predistribuce.import_historical_data` (Developer Tools → Actions), which takes the config entry, the EAN, and a `date_from`/`date_to` range — handy for scripts and automations. The options-flow step above is just a thin form on top of this same action.
 
@@ -107,8 +114,7 @@ PREdistribuce doesn't publish a fixed time at which a day's consumption data bec
 - Raises a **repair issue** ("PREdistribuce: missing data"), shown as a badge in Settings and listed under Settings → System → Repairs, describing which EAN/day is pending.
 - The repair issue is fixable: clicking **Fix** re-attempts every pending day/EAN on demand. If the distributor still hasn't closed the day, the issue stays open; once the retry succeeds it's dismissed automatically. The next scheduled daily run will also retry automatically, independently of the repair issue.
 
-![Repair issue for missing data](docs/images/pending-notification.png)
-*(placeholder — repair issue screenshot)*
+![Repair issue for missing data](docs/images/repair-missing-data.png)
 
 ## Known limitations
 

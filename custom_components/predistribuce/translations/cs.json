@@ -147,6 +147,9 @@
     },
     "date_range_invalid": {
       "message": "Datum „od“ nesmí být později než datum „do“."
+    },
+    "cannot_connect": {
+      "message": "Nepodařilo se připojit k portálu PREdistribuce: {error}"
     }
   }
 }

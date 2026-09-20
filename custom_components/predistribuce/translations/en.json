@@ -147,6 +147,9 @@
     },
     "date_range_invalid": {
       "message": "The \"from\" date must not be after the \"to\" date."
+    },
+    "cannot_connect": {
+      "message": "Could not connect to the PREdistribuce portal: {error}"
     }
   }
 }

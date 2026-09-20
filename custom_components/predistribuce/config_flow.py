@@ -22,6 +22,7 @@ Pozn.: importy z `homeassistant.*` nejsou testovatelné bez běžícího HA.
 
 from __future__ import annotations
 
+import datetime as dt
 import logging
 from typing import Any
 
@@ -361,7 +362,10 @@ class PreDistribuceOptionsFlow(config_entries.OptionsFlow):
                     )
                 ),
                 vol.Required(ATTR_DATE_FROM): selector.DateSelector(),
-                vol.Required(ATTR_DATE_TO): selector.DateSelector(),
+                vol.Required(
+                    ATTR_DATE_TO,
+                    default=(dt.date.today() - dt.timedelta(days=1)).isoformat(),
+                ): selector.DateSelector(),
             }
         )
         return self.async_show_form(

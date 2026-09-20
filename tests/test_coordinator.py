@@ -18,6 +18,8 @@ from __future__ import annotations
 import datetime as dt
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
+import requests
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.predistribuce import pre_api
@@ -31,6 +33,7 @@ from custom_components.predistribuce.coordinator import (
     PreDistribuceCoordinator,
     _aggregate_hourly,
 )
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
 
 USERNAME = "user@example.cz"
@@ -153,6 +156,39 @@ def test_aggregate_hourly_treats_none_consumption_as_zero():
 
     assert hourly == []
     assert first_unclosed_day == DAY
+
+
+# ---------------------------------------------------------------------------
+# _fetch_and_parse
+# ---------------------------------------------------------------------------
+
+
+def test_fetch_and_parse_wraps_connection_error(hass):
+    """Síťová chyba nesmí proletět jako holá requests výjimka až do
+    service/options-flow volajícího — dřív se tam zobrazilo nic neříkající
+    "unknown error" (ověřeno živě 2026-09-20, viz CLAUDE.md)."""
+    coordinator, _entry = _make_coordinator(hass)
+
+    with (
+        patch("custom_components.predistribuce.coordinator.pre_api.login"),
+        patch(
+            "custom_components.predistribuce.coordinator.pre_api.fetch_report_csv",
+            side_effect=requests.exceptions.ConnectionError("boom"),
+        ),
+    ):
+        with pytest.raises(HomeAssistantError):
+            coordinator._fetch_and_parse(EAN, DAY, DAY)
+
+
+def test_fetch_and_parse_still_raises_auth_failed_on_login_error(hass):
+    coordinator, _entry = _make_coordinator(hass)
+
+    with patch(
+        "custom_components.predistribuce.coordinator.pre_api.login",
+        side_effect=pre_api.LoginError("bad credentials"),
+    ):
+        with pytest.raises(ConfigEntryAuthFailed):
+            coordinator._fetch_and_parse(EAN, DAY, DAY)
 
 
 # ---------------------------------------------------------------------------
