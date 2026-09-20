@@ -151,6 +151,35 @@ def test_extract_label_value_th_td():
     assert pre_api._extract_label_value(html, "Místní část") == "Centrum"
 
 
+def test_extract_label_value_t_cell_div():
+    """Reálný markup `/moje-odberna-mista/` (ověřeno živě 2026-09-20)."""
+    html = (
+        '<div class="t-row">'
+        '<div class="t-cell w50">Ulice, č.p. / č.o.:</div>'
+        '<div class="t-cell w50">Mokrá 1282 / 11</div>'
+        "</div>"
+    )
+    assert pre_api._extract_label_value(html, "Ulice, č.p. / č.o.") == "Mokrá 1282 / 11"
+
+
+def test_extract_label_value_t_cell_div_picks_first_of_duplicate_sections():
+    """Adresa odběrného místa a Zasílací adresa mají stejné labely — musí se
+    vzít první výskyt (skutečná adresa OM), ne druhý (zasílací adresa)."""
+    html = (
+        "<h3>Adresa odběrného místa</h3>"
+        '<div class="t-row">'
+        '<div class="t-cell w50">Místní část:</div>'
+        '<div class="t-cell w50">Chodov</div>'
+        "</div>"
+        "<h3>Zasílací adresa</h3>"
+        '<div class="t-row">'
+        '<div class="t-cell w50">Místní část:</div>'
+        '<div class="t-cell w50">Jiná obec</div>'
+        "</div>"
+    )
+    assert pre_api._extract_label_value(html, "Místní část") == "Chodov"
+
+
 def test_extract_label_value_label_colon_value():
     html = "<span>PSČ, město:</span> 100 00 Praha<br>"
     assert pre_api._extract_label_value(html, "PSČ, město") == "100 00 Praha"
@@ -304,9 +333,20 @@ def test_list_metering_points_extracts_eans_and_addresses(requests_mock):
     )
     detail_html = (
         f"<p>{EAN}</p>"
-        "<dt>Ulice, č.p. / č.o.</dt><dd>Testovací 123</dd>"
-        "<dt>Místní část</dt><dd>Centrum</dd>"
-        "<dt>PSČ, město</dt><dd>100 00 Praha</dd>"
+        "<h3>Adresa odběrného místa</h3>"
+        '<div class="t-row"><div class="t-cell w50">Ulice, č.p. / č.o.:</div>'
+        '<div class="t-cell w50">Testovací 123</div></div>'
+        '<div class="t-row"><div class="t-cell w50">Místní část:</div>'
+        '<div class="t-cell w50">Centrum</div></div>'
+        '<div class="t-row"><div class="t-cell w50">PSČ, město:</div>'
+        '<div class="t-cell w50">100 00 Praha</div></div>'
+        "<h3>Zasílací adresa</h3>"
+        '<div class="t-row"><div class="t-cell w50">Ulice, č.p. / č.o.:</div>'
+        '<div class="t-cell w50">Jiná ulice 1</div></div>'
+        '<div class="t-row"><div class="t-cell w50">Místní část:</div>'
+        '<div class="t-cell w50">Jiná obec</div></div>'
+        '<div class="t-row"><div class="t-cell w50">PSČ, město:</div>'
+        '<div class="t-cell w50">200 00 Jinde</div></div>'
     )
     requests_mock.get(pre_api.REPORT_URL, text=report_html)
     requests_mock.get(pre_api.MOJE_ODBERNA_MISTA_URL, text=detail_html)

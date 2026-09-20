@@ -161,14 +161,25 @@ MOJE_ODBERNA_MISTA_URL = f"{BASE}/cs/muj-ucet/moje-odberna-mista/"
 
 
 def _extract_label_value(html: str, label: str) -> str | None:
-    """Best-effort vytažení hodnoty za daným labelem (dt/dd, th/td nebo "label: hodnota").
+    """Vytažení hodnoty za daným labelem z `/moje-odberna-mista/`.
 
-    NEOVĚŘENO proti reálnému markupu `/moje-odberna-mista/` (nemáme živý
-    dump s tagy, jen textový výpis) — zkouší se víc obvyklých tvarů, a
-    pokud žádný nesedí, vrátí se None. Volající to musí ustát (adresa je
-    jen pro popisek v UI, ne pro funkčnost).
+    Ověřeno živě (2026-09-20) proti reálnému markupu detailu odběrného
+    místa — dvojice sesterských `<div class="t-cell ...">`, label
+    (s dvojtečkou uvnitř) a hodnota:
+
+        <div class="t-row">
+            <div class="t-cell w50">Ulice, č.p. / č.o.:</div>
+            <div class="t-cell w50">Mokrá 1282 / 11</div>
+        </div>
+
+    Stránka obsahuje tuhle trojici labelů dvakrát („Adresa odběrného
+    místa" i „Zasílací adresa" mají stejné labely) — `re.search` vrátí
+    první výskyt, což je v pořádku, protože „Adresa odběrného místa"
+    (skutečná adresa OM) je v HTML vždy první. dt/dd a th/td patterny se
+    nechávají jako fallback pro případ jiného rozvržení stránky.
     """
     patterns = [
+        rf'<div[^>]*class="[^"]*t-cell[^"]*"[^>]*>\s*{re.escape(label)}:?\s*</div>\s*<div[^>]*class="[^"]*t-cell[^"]*"[^>]*>\s*(.*?)\s*</div>',
         rf'<dt[^>]*>\s*{re.escape(label)}\s*</dt>\s*<dd[^>]*>\s*(.*?)\s*</dd>',
         rf'<th[^>]*>\s*{re.escape(label)}\s*</th>\s*<td[^>]*>\s*(.*?)\s*</td>',
         rf'{re.escape(label)}\s*:?\s*</[^>]+>\s*(.*?)\s*<',
