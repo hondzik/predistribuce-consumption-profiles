@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.6](https://github.com/hondzik/predistribuce-consumption-profiles/compare/v0.0.5...v0.0.6) (2026-09-20)
+
+
+### Features
+
+* refactor import time handling in configuration and update translations ([4c0fff2](https://github.com/hondzik/predistribuce-consumption-profiles/commit/4c0fff2896a06c2f6b37a38eddf6909cc7d5cf06))
+
 ## [0.0.5](https://github.com/hondzik/predistribuce-consumption-profiles/compare/v0.0.4...v0.0.5) (2026-09-20)
 
 
