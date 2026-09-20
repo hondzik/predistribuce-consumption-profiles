@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.8](https://github.com/hondzik/predistribuce-consumption-profiles/compare/v0.0.7...v0.0.8) (2026-09-20)
+
+
+### Bug Fixes
+
+* improve label extraction logic for consumption profiles ([f110f08](https://github.com/hondzik/predistribuce-consumption-profiles/commit/f110f089b28943ba710150cfa161a090a73d923b))
+
 ## [0.0.7](https://github.com/hondzik/predistribuce-consumption-profiles/compare/v0.0.6...v0.0.7) (2026-09-20)
 
 
