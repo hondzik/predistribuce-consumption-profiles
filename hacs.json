@@ -1,5 +1,7 @@
 {
-  "name": "PREdistribuce",
+  "name": "PREdistribuce Consumption Profiles",
   "render_readme": true,
+  "hide_default_branch": true,
+  "content_in_root": false,
   "homeassistant": "2026.9.0"
 }

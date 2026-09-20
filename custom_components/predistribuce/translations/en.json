@@ -1,0 +1,97 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "PREdistribuce (Consumption Profiles)",
+        "description": "Enter the login for your PREdistribuce customer portal account. It is used only to read consumption data — nothing is changed on the portal.",
+        "data": {
+          "username": "Username",
+          "password": "Password"
+        },
+        "data_description": {
+          "username": "Email or customer number used to log in to predistribuce.cz",
+          "password": "Portal password"
+        }
+      },
+      "eans": {
+        "title": "Metering points and schedule",
+        "description": "Select which metering points (EANs) to import, and the local time of day when the daily import should run.",
+        "data": {
+          "eans": "Metering points",
+          "import_time": "Import time"
+        },
+        "data_description": {
+          "eans": "At least one must be selected.",
+          "import_time": "Local time as configured in Home Assistant (Settings → System → General) when the daily import should run. Note: the previous day's data only becomes available from the distributor early the following day, in the Europe/Prague time zone (UTC+1/+2 depending on daylight saving). If it isn't closed yet, this integration creates a repair issue (Settings → Repairs) — the next scheduled import does NOT retry it automatically, you need to resolve the repair issue to retry."
+        }
+      },
+      "reauth_confirm": {
+        "title": "Re-authenticate PREdistribuce (Consumption Profiles)",
+        "description": "The login for account \"{username}\" is no longer valid. Enter the current password to continue.",
+        "data": {
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Invalid username or password.",
+      "cannot_connect": "Could not connect to the PREdistribuce portal.",
+      "no_eans_found": "No metering points (EANs) were found on this account.",
+      "no_eans_selected": "Select at least one metering point."
+    },
+    "abort": {
+      "already_configured": "This account is already configured.",
+      "reauth_successful": "Re-authentication was successful."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "PREdistribuce (Consumption Profiles) options",
+        "menu_options": {
+          "schedule": "Change import time",
+          "metering_points": "Add a metering point"
+        }
+      },
+      "schedule": {
+        "title": "Import time",
+        "data": {
+          "import_time": "Import time"
+        },
+        "data_description": {
+          "import_time": "Local time as configured in Home Assistant (Settings → System → General) when the daily import should run. Note: the previous day's data only becomes available from the distributor early the following day, in the Europe/Prague time zone (UTC+1/+2 depending on daylight saving). If it isn't closed yet, this integration creates a repair issue (Settings → Repairs) — the next scheduled import does NOT retry it automatically, you need to resolve the repair issue to retry."
+        }
+      },
+      "metering_points": {
+        "title": "Metering points",
+        "description": "Select which metering points (EANs) should be imported. A newly added one only starts importing from now on — a repair issue will offer to backfill once a day's data becomes available.",
+        "data": {
+          "eans": "Metering points"
+        }
+      }
+    },
+    "error": {
+      "no_eans_selected": "Select at least one metering point."
+    },
+    "abort": {
+      "invalid_auth": "Invalid username or password.",
+      "cannot_connect": "Could not connect to the PREdistribuce portal."
+    }
+  },
+  "issues": {
+    "pending_data": {
+      "title": "PREdistribuce (Consumption Profiles): missing data",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Retry download",
+            "description": "The distributor does not have data yet for these days:\n\n{lines}\n\nClick Submit to try downloading them again now. If the distributor still has not closed them, the issue will stay open."
+          }
+        },
+        "abort": {
+          "still_pending": "The distributor still does not have data for these days. Try again later or wait for the next scheduled run."
+        }
+      }
+    }
+  }
+}

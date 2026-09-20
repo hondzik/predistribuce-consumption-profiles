@@ -261,6 +261,25 @@ async def test_options_schedule_updates_entry_options(hass):
     assert entry.options[CONF_IMPORT_MINUTE] == 15
 
 
+async def test_options_schedule_form_with_legacy_float_hour_minute(hass):
+    """Regresní test: staré entry (uložené přes dřívější NumberSelector)
+    mají hour/minute jako float — nesmí to shodit formulář ValueError."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=USERNAME,
+        data={**_entry_data(), CONF_IMPORT_HOUR: 12.0, CONF_IMPORT_MINUTE: 10.0},
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"next_step_id": "schedule"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "schedule"
+
+
 async def test_options_metering_points_success(hass):
     entry = MockConfigEntry(domain=DOMAIN, unique_id=USERNAME, data=_entry_data())
     entry.add_to_hass(hass)

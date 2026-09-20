@@ -92,7 +92,13 @@ CONF_IMPORT_TIME = "import_time"
 
 
 def _import_time_schema_field(default_hour: int, default_minute: int) -> dict[Any, Any]:
-    """Jedno pole s nativním time pickerem místo dvou číselníků hodina/minuta."""
+    """Jedno pole s nativním time pickerem místo dvou číselníků hodina/minuta.
+
+    Staré config entries mohou mít hour/minute uložené jako float — dřívější
+    NumberSelector vždy vracel float, i pro celá čísla (ověřeno v HA core
+    zdrojáku). `:02d` na float spadne s ValueError, proto explicitní int().
+    """
+    default_hour, default_minute = int(default_hour), int(default_minute)
     return {
         vol.Required(
             CONF_IMPORT_TIME, default=f"{default_hour:02d}:{default_minute:02d}:00"
