@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.10](https://github.com/hondzik/predistribuce-consumption-profiles/compare/v0.0.9...v0.0.10) (2026-09-20)
+
+
+### Bug Fixes
+
+* correct running sum baseline when backfilling historical data ([cb6badc](https://github.com/hondzik/predistribuce-consumption-profiles/commit/cb6badce9578998d361ccc425f29f5c7f06f1a39))
+
 ## [0.0.9](https://github.com/hondzik/predistribuce-consumption-profiles/compare/v0.0.8...v0.0.9) (2026-09-20)
 
 
