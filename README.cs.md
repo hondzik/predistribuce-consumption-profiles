@@ -16,6 +16,8 @@ Vlastní integrace pro Home Assistant, která se přihlásí do klientského por
 - [Jak to funguje](#jak-to-funguje)
 - [Požadavky](#požadavky)
 - [Instalace](#instalace)
+  - [Přes HACS (doporučeno)](#přes-hacs-doporučeno)
+  - [Manuálně](#manuálně)
 - [Konfigurace](#konfigurace)
   - [Prvotní nastavení](#prvotní-nastavení)
   - [Přidání statistiky do Energy dashboardu](#přidání-statistiky-do-energy-dashboardu)
