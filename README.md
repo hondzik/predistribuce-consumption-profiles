@@ -1,4 +1,4 @@
-# PREdistribuce — Consumption Profiles
+# PREdistribuce — Consumption Profiles <!-- omit from toc -->
 
 [Čeština / Czech version](README.cs.md)
 
@@ -11,27 +11,25 @@ A Home Assistant custom integration that logs into the [PREdistribuce](https://w
 
 ![Energy dashboard with imported PREdistribuce consumption](docs/images/energy.png)
 
-## Table of contents
+## Table of contents <!-- omit from toc -->
 
-- [PREdistribuce — Consumption Profiles](#predistribuce--consumption-profiles)
-  - [Table of contents](#table-of-contents)
-  - [How it works](#how-it-works)
-  - [Requirements](#requirements)
-  - [Installation](#installation)
-    - [Via HACS (recommended)](#via-hacs-recommended)
-    - [Manual](#manual)
-  - [Configuration](#configuration)
-    - [Initial setup](#initial-setup)
-    - [Adding the statistic to the Energy dashboard](#adding-the-statistic-to-the-energy-dashboard)
-    - [Adding another metering point later](#adding-another-metering-point-later)
-    - [Changing the import schedule](#changing-the-import-schedule)
-    - [Manually importing historical data](#manually-importing-historical-data)
-  - [Missing / not-yet-closed days](#missing--not-yet-closed-days)
-  - [Known limitations](#known-limitations)
-  - [Troubleshooting](#troubleshooting)
-  - [Versioning \& releases](#versioning--releases)
-  - [Disclaimer](#disclaimer)
-  - [Credits](#credits)
+- [How it works](#how-it-works)
+- [Requirements](#requirements)
+- [Installation](#installation)
+  - [Via HACS (recommended)](#via-hacs-recommended)
+  - [Manual](#manual)
+- [Configuration](#configuration)
+  - [Initial setup](#initial-setup)
+  - [Adding the statistic to the Energy dashboard](#adding-the-statistic-to-the-energy-dashboard)
+  - [Adding another metering point later](#adding-another-metering-point-later)
+  - [Changing the import schedule](#changing-the-import-schedule)
+  - [Manually importing historical data](#manually-importing-historical-data)
+- [Missing / not-yet-closed days](#missing--not-yet-closed-days)
+- [Known limitations](#known-limitations)
+- [Troubleshooting](#troubleshooting)
+- [Versioning \& releases](#versioning--releases)
+- [Disclaimer](#disclaimer)
+- [Credits](#credits)
 
 ## How it works
 

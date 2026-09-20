@@ -1,4 +1,4 @@
-# PREdistribuce — Profily spotřeby
+# PREdistribuce — Profily spotřeby <!-- omit from toc -->
 
 [English version](README.md)
 
@@ -11,7 +11,7 @@ Vlastní integrace pro Home Assistant, která se přihlásí do klientského por
 
 ![Energy dashboard s naimportovanou spotřebou z PREdistribuce](docs/images/energy.png)
 
-## Obsah
+## Obsah <!-- omit from toc -->
 
 - [Jak to funguje](#jak-to-funguje)
 - [Požadavky](#požadavky)
