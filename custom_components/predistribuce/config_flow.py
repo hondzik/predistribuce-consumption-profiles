@@ -31,6 +31,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import selector
 
 from . import pre_api
@@ -42,6 +43,7 @@ from .const import (
     DEFAULT_IMPORT_MINUTE,
     DOMAIN,
 )
+from .services import ATTR_DATE_FROM, ATTR_DATE_TO, ATTR_EAN, SERVICE_IMPORT_HISTORICAL_DATA
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -250,7 +252,8 @@ class PreDistribuceOptionsFlow(config_entries.OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         return self.async_show_menu(
-            step_id="init", menu_options=["schedule", "metering_points"]
+            step_id="init",
+            menu_options=["schedule", "metering_points", "historical_import"],
         )
 
     async def async_step_schedule(
@@ -308,4 +311,59 @@ class PreDistribuceOptionsFlow(config_entries.OptionsFlow):
         schema = _eans_select_schema(self._available_points, current_eans)
         return self.async_show_form(
             step_id="metering_points", data_schema=schema, errors=errors
+        )
+
+    async def async_step_historical_import(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Tenká UI vrstva nad service `predistribuce.import_historical_data`.
+
+        Validace (EAN patří k účtu, přihlášení, samotný import) žije jen
+        v `services.py` — tenhle krok jen vyplní formulář a zavolá service,
+        aby existovala jediná logika pro obě cesty (Developer Tools i UI).
+        """
+        configured_eans = self.config_entry.options.get(
+            CONF_EANS, self.config_entry.data.get(CONF_EANS, [])
+        )
+        if not configured_eans:
+            return self.async_abort(reason="no_eans_configured")
+
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            try:
+                response = await self.hass.services.async_call(
+                    DOMAIN,
+                    SERVICE_IMPORT_HISTORICAL_DATA,
+                    {
+                        "config_entry_id": self.config_entry.entry_id,
+                        ATTR_EAN: user_input[ATTR_EAN],
+                        ATTR_DATE_FROM: user_input[ATTR_DATE_FROM],
+                        ATTR_DATE_TO: user_input[ATTR_DATE_TO],
+                    },
+                    blocking=True,
+                    return_response=True,
+                )
+            except HomeAssistantError:
+                errors["base"] = "import_failed"
+            else:
+                imported = response["imported"] if response else 0
+                return self.async_abort(
+                    reason="historical_import_done",
+                    description_placeholders={"count": str(imported)},
+                )
+
+        schema = vol.Schema(
+            {
+                vol.Required(ATTR_EAN, default=configured_eans[0]): selector.SelectSelector(
+                    selector.SelectSelectorConfig(
+                        options=configured_eans,
+                        mode=selector.SelectSelectorMode.DROPDOWN,
+                    )
+                ),
+                vol.Required(ATTR_DATE_FROM): selector.DateSelector(),
+                vol.Required(ATTR_DATE_TO): selector.DateSelector(),
+            }
+        )
+        return self.async_show_form(
+            step_id="historical_import", data_schema=schema, errors=errors
         )

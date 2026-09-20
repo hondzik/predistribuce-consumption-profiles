@@ -1,0 +1,19 @@
+import_historical_data:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: predistribuce
+    ean:
+      required: true
+      selector:
+        text:
+    date_from:
+      required: true
+      selector:
+        date:
+    date_to:
+      required: true
+      selector:
+        date:

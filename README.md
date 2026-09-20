@@ -25,6 +25,7 @@ A Home Assistant custom integration that logs into the [PREdistribuce](https://w
     - [Initial setup](#initial-setup)
     - [Adding another metering point later](#adding-another-metering-point-later)
     - [Changing the import schedule](#changing-the-import-schedule)
+    - [Manually importing historical data](#manually-importing-historical-data)
   - [Missing / not-yet-closed days](#missing--not-yet-closed-days)
   - [Known limitations](#known-limitations)
   - [Troubleshooting](#troubleshooting)
@@ -90,6 +91,12 @@ Open the integration's **Configure** options, choose **Metering points**, and se
 ### Changing the import schedule
 
 Open the integration's **Configure** options and choose **Schedule** to change the hour/minute the daily import runs at.
+
+### Manually importing historical data
+
+To (re)download a specific date range for a specific metering point — for example to backfill data from before the integration was set up, or to force a retry outside the daily schedule — open the integration's **Configure** options and choose **Import historical data**. Pick the metering point and the from/to dates and submit; the result tells you how many hourly records were imported (0 usually means the distributor hasn't closed out the requested day(s) yet).
+
+The same operation is also available as the Home Assistant action/service `predistribuce.import_historical_data` (Developer Tools → Actions), which takes the config entry, the EAN, and a `date_from`/`date_to` range — handy for scripts and automations. The options-flow step above is just a thin form on top of this same action.
 
 ## Missing / not-yet-closed days
 

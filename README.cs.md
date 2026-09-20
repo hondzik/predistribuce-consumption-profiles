@@ -21,6 +21,7 @@ Vlastní integrace pro Home Assistant, která se přihlásí do klientského por
   - [Prvotní nastavení](#prvotní-nastavení)
   - [Přidání dalšího odběrného místa později](#přidání-dalšího-odběrného-místa-později)
   - [Změna času importu](#změna-času-importu)
+  - [Manuální import historických dat](#manuální-import-historických-dat)
 - [Chybějící / ještě neuzavřené dny](#chybějící--ještě-neuzavřené-dny)
 - [Známá omezení](#známá-omezení)
 - [Řešení problémů](#řešení-problémů)
@@ -86,6 +87,12 @@ Otevřete nastavení integrace (**Konfigurovat**), zvolte **Odběrná místa** a
 ### Změna času importu
 
 Otevřete nastavení integrace (**Konfigurovat**) a zvolte **Rozvrh** pro změnu hodiny/minuty, kdy se denní import spouští.
+
+### Manuální import historických dat
+
+Pro (znovu)stažení konkrétního rozsahu dat u konkrétního odběrného místa — například pro doplnění dat zpětně od doby před nastavením integrace, nebo pro vynucení opakování mimo denní rozvrh — otevřete nastavení integrace (**Konfigurovat**) a zvolte **Importovat historická data**. Vyberte odběrné místo a rozsah od/do data a odešlete; výsledek ukáže, kolik hodinových záznamů se naimportovalo (0 obvykle znamená, že distributor požadovaný den/dny ještě neuzavřel).
+
+Stejná operace je dostupná i jako akce/service Home Assistantu `predistribuce.import_historical_data` (Nástroje pro vývojáře → Akce), která přijímá config entry, EAN a rozsah `date_from`/`date_to` — vhodné pro skripty a automatizace. Výše popsaný krok v options flow je jen tenký formulář postavený nad touto stejnou akcí.
 
 ## Chybějící / ještě neuzavřené dny
 

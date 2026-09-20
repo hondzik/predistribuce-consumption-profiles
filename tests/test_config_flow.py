@@ -9,12 +9,14 @@ konfigurace existující entry.
 
 from __future__ import annotations
 
-from unittest.mock import patch
+import datetime as dt
+from unittest.mock import AsyncMock, patch
 
 import pytest
 import requests
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
+from homeassistant.config_entries import ConfigEntryState, SOURCE_REAUTH, SOURCE_USER
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.exceptions import HomeAssistantError
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.predistribuce import pre_api
@@ -24,6 +26,8 @@ from custom_components.predistribuce.const import (
     CONF_IMPORT_MINUTE,
     DOMAIN,
 )
+from custom_components.predistribuce.coordinator import PreDistribuceCoordinator
+from custom_components.predistribuce.services import async_register_services
 
 USERNAME = "user@example.cz"
 PASSWORD = "heslo123"
@@ -239,7 +243,11 @@ async def test_options_init_shows_menu(hass):
 
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "init"
-    assert set(result["menu_options"]) == {"schedule", "metering_points"}
+    assert set(result["menu_options"]) == {
+        "schedule",
+        "metering_points",
+        "historical_import",
+    }
 
 
 async def test_options_schedule_updates_entry_options(hass):
@@ -334,3 +342,86 @@ async def test_options_metering_points_no_selection_error(hass):
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "no_eans_selected"}
+
+
+# ---------------------------------------------------------------------------
+# options flow — historical_import
+# ---------------------------------------------------------------------------
+
+
+async def _setup_loaded_entry_with_service(hass) -> tuple[MockConfigEntry, PreDistribuceCoordinator]:
+    """LOADED entry s coordinatorem + zaregistrovaná service.
+
+    `async_step_historical_import` je jen tenká vrstva nad service
+    `predistribuce.import_historical_data` (viz `services.py`) — bez
+    zaregistrované service a `runtime_data` na LOADED entry by volání
+    service selhalo ("entry_not_loaded"/neexistující service).
+    """
+    entry = MockConfigEntry(domain=DOMAIN, unique_id=USERNAME, data=_entry_data())
+    entry.add_to_hass(hass)
+    with patch(
+        "custom_components.predistribuce.coordinator.async_track_time_change",
+        return_value=lambda: None,
+    ):
+        coordinator = PreDistribuceCoordinator(hass, entry)
+    entry.runtime_data = coordinator
+    entry.mock_state(hass, ConfigEntryState.LOADED)
+    async_register_services(hass)
+    return entry, coordinator
+
+
+async def test_options_historical_import_success(hass):
+    entry, coordinator = await _setup_loaded_entry_with_service(hass)
+    coordinator.async_import_range = AsyncMock(return_value=5)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"next_step_id": "historical_import"}
+    )
+    assert result["step_id"] == "historical_import"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {"ean": EAN, "date_from": "2026-09-01", "date_to": "2026-09-02"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "historical_import_done"
+    assert result["description_placeholders"] == {"count": "5"}
+    coordinator.async_import_range.assert_awaited_once_with(
+        EAN, dt.date(2026, 9, 1), dt.date(2026, 9, 2)
+    )
+
+
+async def test_options_historical_import_no_eans_configured_aborts(hass):
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=USERNAME,
+        data={**_entry_data(), CONF_EANS: []},
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"next_step_id": "historical_import"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_eans_configured"
+
+
+async def test_options_historical_import_service_failure_shows_error(hass):
+    entry, coordinator = await _setup_loaded_entry_with_service(hass)
+    coordinator.async_import_range = AsyncMock(side_effect=HomeAssistantError("boom"))
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"next_step_id": "historical_import"}
+    )
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {"ean": EAN, "date_from": "2026-09-01", "date_to": "2026-09-02"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "import_failed"}

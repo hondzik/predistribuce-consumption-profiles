@@ -50,7 +50,8 @@
         "title": "PREdistribuce (Consumption Profiles) options",
         "menu_options": {
           "schedule": "Change import time",
-          "metering_points": "Add a metering point"
+          "metering_points": "Add a metering point",
+          "historical_import": "Import historical data"
         }
       },
       "schedule": {
@@ -68,14 +69,30 @@
         "data": {
           "eans": "Metering points"
         }
+      },
+      "historical_import": {
+        "title": "Import historical data",
+        "data": {
+          "ean": "Metering point",
+          "date_from": "From date",
+          "date_to": "To date"
+        },
+        "data_description": {
+          "ean": "Metering point (EAN) to import — must already be configured for this account.",
+          "date_from": "First day to import (inclusive).",
+          "date_to": "Last day to import (inclusive). Automatically capped to yesterday — today's consumption is always zero."
+        }
       }
     },
     "error": {
-      "no_eans_selected": "Select at least one metering point."
+      "no_eans_selected": "Select at least one metering point.",
+      "import_failed": "Import failed. Check the logs for details."
     },
     "abort": {
       "invalid_auth": "Invalid username or password.",
-      "cannot_connect": "Could not connect to the PREdistribuce portal."
+      "cannot_connect": "Could not connect to the PREdistribuce portal.",
+      "no_eans_configured": "No metering points are configured for this account yet.",
+      "historical_import_done": "Import finished: {count} hourly records imported. If 0, the distributor may not have closed the requested days yet."
     }
   },
   "issues": {
@@ -92,6 +109,41 @@
           "still_pending": "The distributor still does not have data for these days. Try again later or wait for the next scheduled run."
         }
       }
+    }
+  },
+  "services": {
+    "import_historical_data": {
+      "name": "Import historical data",
+      "description": "Manually (re)download and import consumption data for one metering point and a date range.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Account",
+          "description": "Which PREdistribuce account to use."
+        },
+        "ean": {
+          "name": "Metering point (EAN)",
+          "description": "Must be one of the metering points already configured for this account."
+        },
+        "date_from": {
+          "name": "From date",
+          "description": "First day to import (inclusive)."
+        },
+        "date_to": {
+          "name": "To date",
+          "description": "Last day to import (inclusive). Automatically capped to yesterday."
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "entry_not_found": {
+      "message": "PREdistribuce account not found."
+    },
+    "entry_not_loaded": {
+      "message": "This PREdistribuce account is not currently loaded."
+    },
+    "ean_not_configured": {
+      "message": "Metering point {ean} is not configured for this account."
     }
   }
 }

@@ -50,7 +50,8 @@
         "title": "Nastavení PREdistribuce (Profily spotřeby)",
         "menu_options": {
           "schedule": "Změnit čas importu",
-          "metering_points": "Přidat odběrné místo"
+          "metering_points": "Přidat odběrné místo",
+          "historical_import": "Importovat historická data"
         }
       },
       "schedule": {
@@ -68,14 +69,30 @@
         "data": {
           "eans": "Odběrná místa"
         }
+      },
+      "historical_import": {
+        "title": "Import historických dat",
+        "data": {
+          "ean": "Odběrné místo",
+          "date_from": "Od data",
+          "date_to": "Do data"
+        },
+        "data_description": {
+          "ean": "Odběrné místo (EAN) k importu — musí už být nakonfigurované pro tento účet.",
+          "date_from": "První den k importu (včetně).",
+          "date_to": "Poslední den k importu (včetně). Automaticky se omezí nejdřív na včerejšek — spotřeba za dnešek je vždy nulová."
+        }
       }
     },
     "error": {
-      "no_eans_selected": "Vyberte alespoň jedno odběrné místo."
+      "no_eans_selected": "Vyberte alespoň jedno odběrné místo.",
+      "import_failed": "Import se nezdařil. Podrobnosti v logu."
     },
     "abort": {
       "invalid_auth": "Neplatné uživatelské jméno nebo heslo.",
-      "cannot_connect": "Nepodařilo se připojit k portálu PREdistribuce."
+      "cannot_connect": "Nepodařilo se připojit k portálu PREdistribuce.",
+      "no_eans_configured": "Pro tento účet ještě nejsou nakonfigurována žádná odběrná místa.",
+      "historical_import_done": "Import dokončen: naimportováno {count} hodinových záznamů. Pokud 0, distributor možná ještě nemá požadované dny uzavřené."
     }
   },
   "issues": {
@@ -92,6 +109,41 @@
           "still_pending": "Distributor pořád ještě nemá data za tyto dny k dispozici. Zkuste to znovu později, nebo počkejte na příští naplánovaný běh."
         }
       }
+    }
+  },
+  "services": {
+    "import_historical_data": {
+      "name": "Import historických dat",
+      "description": "Ručně (znovu) stáhne a naimportuje spotřebu za jedno odběrné místo a rozsah dat.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Účet",
+          "description": "Který účet PREdistribuce použít."
+        },
+        "ean": {
+          "name": "Odběrné místo (EAN)",
+          "description": "Musí být jedno z odběrných míst už nakonfigurovaných pro tento účet."
+        },
+        "date_from": {
+          "name": "Od data",
+          "description": "První den k importu (včetně)."
+        },
+        "date_to": {
+          "name": "Do data",
+          "description": "Poslední den k importu (včetně). Automaticky se omezí nejdřív na včerejšek."
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "entry_not_found": {
+      "message": "Účet PREdistribuce nebyl nalezen."
+    },
+    "entry_not_loaded": {
+      "message": "Tento účet PREdistribuce není momentálně načtený."
+    },
+    "ean_not_configured": {
+      "message": "Odběrné místo {ean} není u tohoto účtu nakonfigurované."
     }
   }
 }
