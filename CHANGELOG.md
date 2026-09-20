@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.11](https://github.com/hondzik/predistribuce-consumption-profiles/compare/v0.0.10...v0.0.11) (2026-09-20)
+
+
+### Features
+
+* enhance date validation and improve aggregation logic for unclosed days ([468a5bd](https://github.com/hondzik/predistribuce-consumption-profiles/commit/468a5bd212d3e60914e0b6951a4569c814b25719))
+
 ## [0.0.10](https://github.com/hondzik/predistribuce-consumption-profiles/compare/v0.0.9...v0.0.10) (2026-09-20)
 
 
