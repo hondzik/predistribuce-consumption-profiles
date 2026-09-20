@@ -124,7 +124,7 @@ async def test_full_flow_creates_entry(hass):
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_EANS: [EAN], CONF_IMPORT_HOUR: 7, CONF_IMPORT_MINUTE: 30},
+            {CONF_EANS: [EAN], "import_time": "07:30:00"},
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -151,7 +151,7 @@ async def test_eans_step_requires_selection(hass):
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_EANS: [], CONF_IMPORT_HOUR: 6, CONF_IMPORT_MINUTE: 0},
+            {CONF_EANS: [], "import_time": "06:00:00"},
         )
 
     assert result["type"] is FlowResultType.FORM
@@ -253,7 +253,7 @@ async def test_options_schedule_updates_entry_options(hass):
     assert result["step_id"] == "schedule"
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {CONF_IMPORT_HOUR: 8, CONF_IMPORT_MINUTE: 15}
+        result["flow_id"], {"import_time": "08:15:00"}
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY

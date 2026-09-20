@@ -88,6 +88,23 @@ def _merged_options(entry: config_entries.ConfigEntry, **updates: Any) -> dict[s
     return merged
 
 
+CONF_IMPORT_TIME = "import_time"
+
+
+def _import_time_schema_field(default_hour: int, default_minute: int) -> dict[Any, Any]:
+    """Jedno pole s nativním time pickerem místo dvou číselníků hodina/minuta."""
+    return {
+        vol.Required(
+            CONF_IMPORT_TIME, default=f"{default_hour:02d}:{default_minute:02d}:00"
+        ): selector.TimeSelector(),
+    }
+
+
+def _hour_minute_from_import_time(user_input: dict[str, Any]) -> dict[str, int]:
+    hour, minute, *_rest = user_input[CONF_IMPORT_TIME].split(":")
+    return {CONF_IMPORT_HOUR: int(hour), CONF_IMPORT_MINUTE: int(minute)}
+
+
 class PreDistribuceConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Nastavení integrace: přihlášení -> výběr odběrných míst a času stahování."""
 
@@ -150,31 +167,13 @@ class PreDistribuceConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         "username": self._username,
                         "password": self._password,
                         CONF_EANS: user_input[CONF_EANS],
-                        CONF_IMPORT_HOUR: user_input[CONF_IMPORT_HOUR],
-                        CONF_IMPORT_MINUTE: user_input[CONF_IMPORT_MINUTE],
+                        **_hour_minute_from_import_time(user_input),
                     },
                 )
 
         schema = _eans_select_schema(
             self._available_points, [p.ean for p in self._available_points]
-        ).extend(
-            {
-                vol.Required(
-                    CONF_IMPORT_HOUR, default=DEFAULT_IMPORT_HOUR
-                ): selector.NumberSelector(
-                    selector.NumberSelectorConfig(
-                        min=0, max=23, mode=selector.NumberSelectorMode.BOX
-                    )
-                ),
-                vol.Required(
-                    CONF_IMPORT_MINUTE, default=DEFAULT_IMPORT_MINUTE
-                ): selector.NumberSelector(
-                    selector.NumberSelectorConfig(
-                        min=0, max=59, mode=selector.NumberSelectorMode.BOX
-                    )
-                ),
-            }
-        )
+        ).extend(_import_time_schema_field(DEFAULT_IMPORT_HOUR, DEFAULT_IMPORT_MINUTE))
         return self.async_show_form(step_id="eans", data_schema=schema, errors=errors)
 
     async def async_step_reauth(
@@ -253,7 +252,9 @@ class PreDistribuceOptionsFlow(config_entries.OptionsFlow):
     ) -> FlowResult:
         if user_input is not None:
             return self.async_create_entry(
-                data=_merged_options(self.config_entry, **user_input)
+                data=_merged_options(
+                    self.config_entry, **_hour_minute_from_import_time(user_input)
+                )
             )
 
         current_hour = self.config_entry.options.get(
@@ -267,22 +268,7 @@ class PreDistribuceOptionsFlow(config_entries.OptionsFlow):
         return self.async_show_form(
             step_id="schedule",
             data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_IMPORT_HOUR, default=current_hour
-                    ): selector.NumberSelector(
-                        selector.NumberSelectorConfig(
-                            min=0, max=23, mode=selector.NumberSelectorMode.BOX
-                        )
-                    ),
-                    vol.Required(
-                        CONF_IMPORT_MINUTE, default=current_minute
-                    ): selector.NumberSelector(
-                        selector.NumberSelectorConfig(
-                            min=0, max=59, mode=selector.NumberSelectorMode.BOX
-                        )
-                    ),
-                }
+                _import_time_schema_field(current_hour, current_minute)
             ),
         )
 

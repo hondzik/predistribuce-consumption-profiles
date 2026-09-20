@@ -386,3 +386,89 @@ def test_main_fails_without_ean(monkeypatch, capsys):
     monkeypatch.delenv("PRE_EAN", raising=False)
     assert pre_api.main([]) == 1
     assert "--ean" in capsys.readouterr().err
+
+
+# ---------------------------------------------------------------------------
+# main — celý běh (login + fetch_report_csv + parse_csv), síť mockovaná
+# ---------------------------------------------------------------------------
+
+
+def _mock_full_flow(requests_mock, *, readings: int) -> bytes:
+    """Namockuje login + fetch_report_csv a vrátí odpovídající syrové CSV."""
+    requests_mock.get(pre_api.LOGIN_URL, text="přihlašovací formulář")
+    requests_mock.post(pre_api.LOGIN_URL, text="vítejte, Odhlásit")
+    requests_mock.get(pre_api.REPORT_URL, text=_report_page(checked=True))
+
+    lines = ["Počátek intervalu;Konec intervalu;Spotřeba [kWh];Výkon [kW]"]
+    for i in range(readings):
+        start = dt.datetime(2026, 9, 16) + dt.timedelta(minutes=15 * i)
+        end = start + dt.timedelta(minutes=15)
+        lines.append(f"{start:%d.%m.%Y %H:%M};{end:%d.%m.%Y %H:%M};0,100;0,400")
+    raw = _csv_bytes("\n".join(lines) + "\n")
+
+    requests_mock.post(
+        pre_api.REPORT_URL,
+        [
+            {"text": "...exportCSVForm..."},  # setForm
+            {"content": raw},  # exportCSVForm
+        ],
+    )
+    return raw
+
+
+def _set_main_env(monkeypatch) -> None:
+    monkeypatch.setenv("PRE_USER", "user@example.cz")
+    monkeypatch.setenv("PRE_PASS", "heslo")
+    monkeypatch.delenv("PRE_EAN", raising=False)
+
+
+def test_main_downloads_and_prints_readings(requests_mock, monkeypatch, capsys):
+    _set_main_env(monkeypatch)
+    _mock_full_flow(requests_mock, readings=2)
+
+    result = pre_api.main(
+        ["--ean", EAN, "--date-from", "16.09.2026", "--date-to", "16.09.2026"]
+    )
+
+    assert result == 0
+    out = capsys.readouterr().out
+    assert "načteno 2 intervalů" in out
+    assert "..." not in out
+
+
+def test_main_prints_ellipsis_when_more_than_five_readings(
+    requests_mock, monkeypatch, capsys
+):
+    _set_main_env(monkeypatch)
+    _mock_full_flow(requests_mock, readings=6)
+
+    result = pre_api.main(
+        ["--ean", EAN, "--date-from", "16.09.2026", "--date-to", "16.09.2026"]
+    )
+
+    assert result == 0
+    out = capsys.readouterr().out
+    assert "načteno 6 intervalů" in out
+    assert "..." in out
+
+
+def test_main_writes_raw_csv_to_out_file(requests_mock, monkeypatch, tmp_path):
+    _set_main_env(monkeypatch)
+    raw = _mock_full_flow(requests_mock, readings=1)
+    out_file = tmp_path / "export.csv"
+
+    result = pre_api.main(
+        [
+            "--ean",
+            EAN,
+            "--date-from",
+            "16.09.2026",
+            "--date-to",
+            "16.09.2026",
+            "--out",
+            str(out_file),
+        ]
+    )
+
+    assert result == 0
+    assert out_file.read_bytes() == raw

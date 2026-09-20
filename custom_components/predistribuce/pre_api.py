@@ -316,5 +316,5 @@ def main(argv: list[str]) -> int:
     return 0
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover — jen entrypoint, testuje se main() přímo
     raise SystemExit(main(sys.argv[1:]))

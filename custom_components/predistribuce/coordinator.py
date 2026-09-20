@@ -34,6 +34,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.event import async_track_time_change
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.util.unit_conversion import EnergyConverter
 
 from . import pre_api
 from .const import CONF_EANS, CONF_IMPORT_HOUR, CONF_IMPORT_MINUTE, DOMAIN
@@ -121,6 +122,7 @@ class PreDistribuceCoordinator(DataUpdateCoordinator[None]):
             name=f"PREdistribuce spotřeba {ean}",
             source=DOMAIN,
             statistic_id=statistic_id,
+            unit_class=EnergyConverter.UNIT_CLASS,
             unit_of_measurement="kWh",
         )
         async_add_external_statistics(self.hass, metadata, stats)

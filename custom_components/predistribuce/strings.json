@@ -18,13 +18,11 @@
         "description": "Select which metering points (EANs) to import, and the local time of day when the daily import should run.",
         "data": {
           "eans": "Metering points",
-          "import_hour": "Import hour",
-          "import_minute": "Import minute"
+          "import_time": "Import time"
         },
         "data_description": {
           "eans": "At least one must be selected.",
-          "import_hour": "Local time (Europe/Prague), 0–23.",
-          "import_minute": "0–59."
+          "import_time": "Local time as configured in Home Assistant (Settings → System → General) when the daily import should run. Note: the previous day's data only becomes available from the distributor early the following day, in the Europe/Prague time zone (UTC+1/+2 depending on daylight saving). If it isn't closed yet, this integration creates a repair issue (Settings → Repairs) — the next scheduled import does NOT retry it automatically, you need to resolve the repair issue to retry."
         }
       },
       "reauth_confirm": {
@@ -58,12 +56,10 @@
       "schedule": {
         "title": "Import time",
         "data": {
-          "import_hour": "Import hour",
-          "import_minute": "Import minute"
+          "import_time": "Import time"
         },
         "data_description": {
-          "import_hour": "Local time (Europe/Prague), 0–23.",
-          "import_minute": "0–59."
+          "import_time": "Local time as configured in Home Assistant (Settings → System → General) when the daily import should run. Note: the previous day's data only becomes available from the distributor early the following day, in the Europe/Prague time zone (UTC+1/+2 depending on daylight saving). If it isn't closed yet, this integration creates a repair issue (Settings → Repairs) — the next scheduled import does NOT retry it automatically, you need to resolve the repair issue to retry."
         }
       },
       "metering_points": {

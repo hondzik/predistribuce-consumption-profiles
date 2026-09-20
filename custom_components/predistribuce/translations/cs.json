@@ -18,13 +18,11 @@
         "description": "Vyberte, která odběrná místa (EANy) se mají importovat, a lokální čas, kdy má proběhnout denní stažení.",
         "data": {
           "eans": "Odběrná místa",
-          "import_hour": "Hodina importu",
-          "import_minute": "Minuta importu"
+          "import_time": "Čas importu"
         },
         "data_description": {
           "eans": "Musí být vybráno alespoň jedno.",
-          "import_hour": "Lokální čas (Europe/Prague), 0–23.",
-          "import_minute": "0–59."
+          "import_time": "Lokální čas podle časové zóny nastavené v Home Assistantu (Nastavení → Systém → Obecné), kdy má proběhnout denní import. Pozn.: data za předchozí den bývají u distributora dostupná až začátkem dalšího dne, v časové zóně Europe/Prague (UTC+1/+2 podle letního času). Pokud den ještě není uzavřený, integrace vytvoří opravnou položku (Nastavení → Opravy) — další naplánovaný import ho SÁM automaticky nezopakuje, stažení je potřeba zopakovat přes tuto opravu."
         }
       },
       "reauth_confirm": {
@@ -58,12 +56,10 @@
       "schedule": {
         "title": "Čas importu",
         "data": {
-          "import_hour": "Hodina importu",
-          "import_minute": "Minuta importu"
+          "import_time": "Čas importu"
         },
         "data_description": {
-          "import_hour": "Lokální čas (Europe/Prague), 0–23.",
-          "import_minute": "0–59."
+          "import_time": "Lokální čas podle časové zóny nastavené v Home Assistantu (Nastavení → Systém → Obecné), kdy má proběhnout denní import. Pozn.: data za předchozí den bývají u distributora dostupná až začátkem dalšího dne, v časové zóně Europe/Prague (UTC+1/+2 podle letního času). Pokud den ještě není uzavřený, integrace vytvoří opravnou položku (Nastavení → Opravy) — další naplánovaný import ho SÁM automaticky nezopakuje, stažení je potřeba zopakovat přes tuto opravu."
         }
       },
       "metering_points": {
