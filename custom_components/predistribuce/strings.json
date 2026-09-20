@@ -144,6 +144,9 @@
     },
     "ean_not_configured": {
       "message": "Metering point {ean} is not configured for this account."
+    },
+    "date_range_invalid": {
+      "message": "The \"from\" date must not be after the \"to\" date."
     }
   }
 }

@@ -144,6 +144,9 @@
     },
     "ean_not_configured": {
       "message": "Odběrné místo {ean} není u tohoto účtu nakonfigurované."
+    },
+    "date_range_invalid": {
+      "message": "Datum „od“ nesmí být později než datum „do“."
     }
   }
 }

@@ -113,7 +113,7 @@ def test_aggregate_hourly_all_zero_day_is_unclosed():
     assert first_unclosed_day == DAY
 
 
-def test_aggregate_hourly_stops_at_first_unclosed_day():
+def test_aggregate_hourly_stops_at_trailing_unclosed_day():
     closed_day = DAY
     unclosed_day = DAY + dt.timedelta(days=1)
     readings = [
@@ -125,6 +125,25 @@ def test_aggregate_hourly_stops_at_first_unclosed_day():
 
     assert len(hourly) == 1
     assert first_unclosed_day == unclosed_day
+
+
+def test_aggregate_hourly_leading_zero_day_is_not_unclosed():
+    """Nulový den PŘED reálnými daty (např. mimo dostupné období portálu,
+    viz CLAUDE.md) se musí naimportovat s nulovou spotřebou, ne zahodit
+    celý zbytek rozsahu za ním — nalezená a opravená chyba (2026-09-20)."""
+    zero_day = DAY
+    real_day = DAY + dt.timedelta(days=1)
+    readings = [
+        _reading(0, 0, 0.0, day=zero_day),
+        _reading(10, 0, 0.5, day=real_day),
+    ]
+
+    hourly, first_unclosed_day = _aggregate_hourly(readings)
+
+    assert first_unclosed_day is None
+    assert len(hourly) == 2
+    consumptions = {consumption for _, consumption in hourly}
+    assert consumptions == {0.0, 0.5}
 
 
 def test_aggregate_hourly_treats_none_consumption_as_zero():

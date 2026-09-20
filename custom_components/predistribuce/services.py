@@ -62,6 +62,10 @@ def async_register_services(hass: HomeAssistant) -> None:
                 translation_key="ean_not_configured",
                 translation_placeholders={"ean": ean},
             )
+        if call.data[ATTR_DATE_FROM] > call.data[ATTR_DATE_TO]:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN, translation_key="date_range_invalid"
+            )
 
         imported = await entry.runtime_data.async_import_range(
             ean, call.data[ATTR_DATE_FROM], call.data[ATTR_DATE_TO]

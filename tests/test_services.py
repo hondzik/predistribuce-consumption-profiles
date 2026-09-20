@@ -137,6 +137,25 @@ async def test_service_rejects_unconfigured_ean(hass):
     coordinator.async_import_range.assert_not_called()
 
 
+async def test_service_rejects_date_from_after_date_to(hass):
+    entry, coordinator = _make_loaded_entry(hass)
+    async_register_services(hass)
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_IMPORT_HISTORICAL_DATA,
+            {
+                "config_entry_id": entry.entry_id,
+                "ean": EAN,
+                "date_from": "2026-09-05",
+                "date_to": "2026-09-01",
+            },
+            blocking=True,
+        )
+    coordinator.async_import_range.assert_not_called()
+
+
 def test_async_register_services_is_idempotent(hass):
     async_register_services(hass)
     async_register_services(hass)

@@ -267,11 +267,18 @@ def _aggregate_hourly(
     """Agreguje 15min intervaly na hodinové kWh v UTC, jen za uzavřené dny.
 
     Den se považuje za neuzavřený (u distributora ještě nedorazil), pokud
-    má úplně všechny intervaly spotřeby nulové — takový den i všechny za
-    ním v rozsahu se přeskočí (chronologicky by neuzavřený den nemělo
-    následovat uzavřené). Vrací dvojici (hodinová data, první neuzavřený
-    den nebo None) — druhá hodnota je pro coordinator, aby věděl, na co
-    má nastavit "čekající" reimport.
+    má úplně všechny intervaly spotřeby nulové. Takto neuzavřené dny se
+    ale hledají jen jako KONCOVÁ (trailing) série od nejnovějšího dne v
+    rozsahu směrem zpět — ne jako první nulový den chronologicky odspodu
+    (nalezená a opravená chyba 2026-09-20, viz CLAUDE.md: historický import
+    rozsahu začínajícího dnem mimo dostupné období portálu, kde první den
+    vyjde celý nulový, dřív zahodil i všechny reálné dny za ním). Jakýkoli
+    nulový den, který NENÍ součástí této koncové série (tedy má za sebou i
+    den s reálnými daty), se naimportuje normálně s nulovou spotřebou —
+    není důvod ho považovat za "čekající na uzavření". Vrací dvojici
+    (hodinová data, nejstarší den z koncové neuzavřené série nebo None) —
+    druhá hodnota je pro coordinator, aby věděl, na co má nastavit
+    "čekající" reimport.
 
     Rozlišení duplicitní místní hodiny při přechodu na zimní čas (`fold`)
     je NEOVĚŘENÉ — žádný přechod nebyl v testovacích datech, nejbližší je
@@ -281,14 +288,24 @@ def _aggregate_hourly(
     for r in readings:
         by_day.setdefault(r.start.date(), []).append(r)
 
-    result: list[tuple[dt.datetime, float]] = []
-    first_unclosed_day: dt.date | None = None
-    for day in sorted(by_day):
-        day_readings = by_day[day]
-        if not any((r.consumption_kwh or 0) > 0 for r in day_readings):
-            _LOGGER.debug("den %s ještě není uzavřený (spotřeba celá 0)", day)
-            first_unclosed_day = day
+    def _is_all_zero(day: dt.date) -> bool:
+        return not any((r.consumption_kwh or 0) > 0 for r in by_day[day])
+
+    sorted_days = sorted(by_day)
+    trailing_unclosed: set[dt.date] = set()
+    for day in reversed(sorted_days):
+        if not _is_all_zero(day):
             break
+        _LOGGER.debug("den %s ještě není uzavřený (spotřeba celá 0)", day)
+        trailing_unclosed.add(day)
+
+    first_unclosed_day = min(trailing_unclosed) if trailing_unclosed else None
+
+    result: list[tuple[dt.datetime, float]] = []
+    for day in sorted_days:
+        if day in trailing_unclosed:
+            continue
+        day_readings = by_day[day]
 
         hourly: dict[dt.datetime, float] = {}
         seen_local_starts: set[dt.datetime] = set()
