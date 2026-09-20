@@ -26,7 +26,7 @@ from homeassistant.components.recorder.models import (
 )
 from homeassistant.components.recorder.statistics import (
     async_add_external_statistics,
-    get_last_statistics,
+    statistics_during_period,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -108,13 +108,39 @@ class PreDistribuceCoordinator(DataUpdateCoordinator[None]):
             return 0
 
         statistic_id = f"{DOMAIN}:{ean}_consumption"
-        running_sum = await self._async_get_baseline_sum(statistic_id)
+        range_start_utc = dt.datetime.combine(
+            date_from, dt.time.min, tzinfo=TZ_PRAGUE
+        ).astimezone(dt.timezone.utc)
+        running_sum = await self._async_get_baseline_sum(statistic_id, range_start_utc)
+
         stats: list[StatisticData] = []
         for hour_start, consumption_kwh in hourly:
             running_sum += consumption_kwh
             stats.append(
                 StatisticData(start=hour_start, state=consumption_kwh, sum=running_sum)
             )
+        new_count = len(stats)
+
+        # Backfill dřívějšího rozsahu k už existujícím pozdějším dnům (např.
+        # historický import po jednotlivých dnech v libovolném pořadí) — pokud
+        # po `date_to` už nějaká data existují, jejich `sum` musí navázat na
+        # `running_sum` spočítaný výše, jinak by na hranici vznikl skok dolů
+        # (ověřeno živě 2026-09-20, viz CLAUDE.md). Běžný denní běh (`date_to`
+        # == včerejšek) žádná pozdější data mít nemůže — dotaz se přeskočí.
+        yesterday = dt.date.today() - dt.timedelta(days=1)
+        if date_to < yesterday:
+            tail_start_utc = hourly[-1][0] + dt.timedelta(hours=1)
+            for row in await self._async_get_existing_rows_from(
+                statistic_id, tail_start_utc
+            ):
+                running_sum += row["state"] or 0.0
+                stats.append(
+                    StatisticData(
+                        start=dt.datetime.fromtimestamp(row["start"], tz=dt.timezone.utc),
+                        state=row["state"],
+                        sum=running_sum,
+                    )
+                )
 
         metadata = StatisticMetaData(
             mean_type=StatisticMeanType.NONE,
@@ -126,8 +152,8 @@ class PreDistribuceCoordinator(DataUpdateCoordinator[None]):
             unit_of_measurement="kWh",
         )
         async_add_external_statistics(self.hass, metadata, stats)
-        _LOGGER.info("%s: naimportováno %d hodinových záznamů", ean, len(stats))
-        return len(stats)
+        _LOGGER.info("%s: naimportováno %d hodinových záznamů", ean, new_count)
+        return new_count
 
     @property
     def has_pending(self) -> bool:
@@ -172,15 +198,47 @@ class PreDistribuceCoordinator(DataUpdateCoordinator[None]):
             data={"entry_id": self.entry.entry_id},
         )
 
-    async def _async_get_baseline_sum(self, statistic_id: str) -> float:
-        """Vrátí poslední známý `sum` pro danou statistiku, nebo 0 pro první import."""
-        last = await get_instance(self.hass).async_add_executor_job(
-            get_last_statistics, self.hass, 1, statistic_id, True, {"sum"}
+    async def _async_get_baseline_sum(
+        self, statistic_id: str, before: dt.datetime
+    ) -> float:
+        """Vrátí `sum` posledního existujícího záznamu s `start < before`, jinak 0.
+
+        Záměrně hledá poslední bod PŘED začátkem importovaného rozsahu, ne
+        poslední bod vůbec (`get_last_statistics`) — ten by při backfillu
+        dřívějšího rozsahu k už existujícím pozdějším dnům vracel špatnou
+        (pozdější) baseline a na hranici by vznikl skok v `sum` dolů
+        (ověřeno živě 2026-09-20, viz CLAUDE.md).
+        """
+        rows = await get_instance(self.hass).async_add_executor_job(
+            statistics_during_period,
+            self.hass,
+            dt.datetime(1970, 1, 1, tzinfo=dt.timezone.utc),
+            before,
+            {statistic_id},
+            "hour",
+            None,
+            {"sum"},
         )
-        rows = last.get(statistic_id)
-        if not rows:
+        existing = rows.get(statistic_id)
+        if not existing:
             return 0.0
-        return rows[0]["sum"] or 0.0
+        return existing[-1]["sum"] or 0.0
+
+    async def _async_get_existing_rows_from(
+        self, statistic_id: str, start: dt.datetime
+    ) -> list[dict]:
+        """Vrátí existující hodinové záznamy (`start`/`state`) od `start` dál."""
+        rows = await get_instance(self.hass).async_add_executor_job(
+            statistics_during_period,
+            self.hass,
+            start,
+            None,
+            {statistic_id},
+            "hour",
+            None,
+            {"state"},
+        )
+        return rows.get(statistic_id, [])
 
     def _fetch_and_parse(
         self, ean: str, date_from: dt.date, date_to: dt.date

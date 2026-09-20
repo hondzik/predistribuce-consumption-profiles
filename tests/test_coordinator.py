@@ -1,10 +1,16 @@
 """Testy pro coordinator.py: agregace 15min intervalů na hodiny, running `sum`
 pro externí statistiky a repair-issue signalizaci neuzavřených dnů.
 
-`get_last_statistics`/`async_add_external_statistics` jsou zde mockované na
-úrovni modulu — reálný zápis/čtení z recorderu by testy zbytečně zpomalil a
-zkomplikoval (timing kolem flush workeru); logika running `sum` a agregace
+`statistics_during_period`/`async_add_external_statistics` jsou zde mockované
+na úrovni modulu — reálný zápis/čtení z recorderu by testy zbytečně zpomalil
+a zkomplikoval (timing kolem flush workeru); logika running `sum` a agregace
 se testuje samostatně a je to to, co v `coordinator.py` není triviální.
+
+`DAY` (2026-09-17) je vždy víc než den před skutečným „dnešek" v testovacím
+prostředí, takže `async_import_range` v testech níže vždy prochází i
+větví „dotázat se na existující pozdější data" (`date_to < yesterday`) —
+proto `statistics_during_period` mock musí vracet odpověď i pro tento druhý
+dotaz (typicky prázdnou), ne jen pro baseline.
 """
 
 from __future__ import annotations
@@ -142,8 +148,8 @@ async def test_import_range_first_import_baseline_zero(hass):
 
     with (
         patch(
-            "custom_components.predistribuce.coordinator.get_last_statistics",
-            return_value={},
+            "custom_components.predistribuce.coordinator.statistics_during_period",
+            side_effect=[{}, {}],
         ),
         patch(
             "custom_components.predistribuce.coordinator.async_add_external_statistics"
@@ -165,8 +171,8 @@ async def test_import_range_continues_running_sum_from_baseline(hass):
 
     with (
         patch(
-            "custom_components.predistribuce.coordinator.get_last_statistics",
-            return_value={STATISTIC_ID: [{"sum": 10.0}]},
+            "custom_components.predistribuce.coordinator.statistics_during_period",
+            side_effect=[{STATISTIC_ID: [{"sum": 10.0}]}, {}],
         ),
         patch(
             "custom_components.predistribuce.coordinator.async_add_external_statistics"
@@ -176,6 +182,39 @@ async def test_import_range_continues_running_sum_from_baseline(hass):
 
     stats = mock_add_stats.call_args.args[2]
     assert stats[0]["sum"] == 11.0
+
+
+async def test_import_range_backfill_rechains_existing_later_data(hass):
+    """Backfill dřívějšího rozsahu musí přepočítat `sum` už existujících
+    pozdějších dat, jinak na hranici vznikne skok dolů (ověřeno živě
+    2026-09-20, viz CLAUDE.md)."""
+    coordinator, _entry = _make_coordinator(hass)
+    coordinator._fetch_and_parse = MagicMock(return_value=[_reading(10, 0, 1.0)])
+
+    existing_later_start = dt.datetime(2026, 9, 18, 8, 0, tzinfo=dt.timezone.utc)
+    existing_later_row = {"start": existing_later_start.timestamp(), "state": 5.0}
+
+    with (
+        patch(
+            "custom_components.predistribuce.coordinator.statistics_during_period",
+            side_effect=[{}, {STATISTIC_ID: [existing_later_row]}],
+        ),
+        patch(
+            "custom_components.predistribuce.coordinator.async_add_external_statistics"
+        ) as mock_add_stats,
+    ):
+        count = await coordinator.async_import_range(EAN, DAY, DAY)
+
+    # do návratové hodnoty se počítá jen nově naimportovaný den, ne
+    # přepočítaný "ocas" už existujících dat.
+    assert count == 1
+    stats = mock_add_stats.call_args.args[2]
+    assert len(stats) == 2
+    assert stats[0]["state"] == 1.0
+    assert stats[0]["sum"] == 1.0
+    assert stats[1]["start"] == existing_later_start
+    assert stats[1]["state"] == 5.0
+    assert stats[1]["sum"] == 6.0
 
 
 async def test_import_range_clamps_date_to_yesterday_and_skips_future(hass):
@@ -223,8 +262,8 @@ async def test_import_range_resolves_pending_and_deletes_issue(hass):
     coordinator._fetch_and_parse = MagicMock(return_value=[_reading(10, 0, 0.5)])
     with (
         patch(
-            "custom_components.predistribuce.coordinator.get_last_statistics",
-            return_value={},
+            "custom_components.predistribuce.coordinator.statistics_during_period",
+            side_effect=[{}, {}],
         ),
         patch(
             "custom_components.predistribuce.coordinator.async_add_external_statistics"
