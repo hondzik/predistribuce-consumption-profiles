@@ -1,6 +1,6 @@
 {
   "domain": "predistribuce",
-  "name": "PREdistribuce",
+  "name": "PREdistribuce (Consumption Profiles)",
   "codeowners": [
     "@hondzik"
   ],
@@ -9,7 +9,7 @@
     "recorder"
   ],
   "documentation": "https://github.com/hondzik/predistribuce-consumption-profiles",
-  "integration_type": "hub",
+  "integration_type": "service",
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/hondzik/predistribuce-consumption-profiles/issues",
   "requirements": [

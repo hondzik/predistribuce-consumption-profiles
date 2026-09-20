@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "PREdistribuce",
+        "title": "PREdistribuce (Profily spotřeby)",
         "description": "Zadejte přihlašovací údaje k účtu klientského portálu PREdistribuce. Použijí se jen ke čtení dat o spotřebě — na portálu se nic nemění.",
         "data": {
           "username": "Uživatelské jméno",
@@ -28,7 +28,7 @@
         }
       },
       "reauth_confirm": {
-        "title": "Znovu přihlásit PREdistribuce",
+        "title": "Znovu přihlásit PREdistribuce (Profily spotřeby)",
         "description": "Přihlášení k účtu „{username}\" už neplatí. Zadejte aktuální heslo pro pokračování.",
         "data": {
           "password": "Heslo"
@@ -49,7 +49,7 @@
   "options": {
     "step": {
       "init": {
-        "title": "Nastavení PREdistribuce",
+        "title": "Nastavení PREdistribuce (Profily spotřeby)",
         "menu_options": {
           "schedule": "Změnit čas importu",
           "metering_points": "Přidat odběrné místo"
@@ -84,7 +84,7 @@
   },
   "issues": {
     "pending_data": {
-      "title": "PREdistribuce: chybějící data",
+      "title": "PREdistribuce (Profily spotřeby): chybějící data",
       "fix_flow": {
         "step": {
           "confirm": {

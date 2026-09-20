@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "PREdistribuce",
+        "title": "PREdistribuce (Consumption Profiles)",
         "description": "Enter the login for your PREdistribuce customer portal account. It is used only to read consumption data — nothing is changed on the portal.",
         "data": {
           "username": "Username",
@@ -28,7 +28,7 @@
         }
       },
       "reauth_confirm": {
-        "title": "Re-authenticate PREdistribuce",
+        "title": "Re-authenticate PREdistribuce (Consumption Profiles)",
         "description": "The login for account \"{username}\" is no longer valid. Enter the current password to continue.",
         "data": {
           "password": "Password"
@@ -49,7 +49,7 @@
   "options": {
     "step": {
       "init": {
-        "title": "PREdistribuce options",
+        "title": "PREdistribuce (Consumption Profiles) options",
         "menu_options": {
           "schedule": "Change import time",
           "metering_points": "Add a metering point"
@@ -84,7 +84,7 @@
   },
   "issues": {
     "pending_data": {
-      "title": "PREdistribuce: missing data",
+      "title": "PREdistribuce (Consumption Profiles): missing data",
       "fix_flow": {
         "step": {
           "confirm": {
