@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.4](https://github.com/hondzik/predistribuce-consumption-profiles/compare/v0.0.3...v0.0.4) (2026-09-19)
+
+
+### Bug Fixes
+
+* update StatisticMetaData to use StatisticMeanType.NONE for consistency ([deb5026](https://github.com/hondzik/predistribuce-consumption-profiles/commit/deb5026ec7fb746b6113e19c8266ca5b5dc70dd0))
+
 ## [0.0.3](https://github.com/hondzik/predistribuce-consumption-profiles/compare/v0.0.2...v0.0.3) (2026-09-19)
 
 
