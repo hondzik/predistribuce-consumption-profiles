@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.7](https://github.com/hondzik/predistribuce-consumption-profiles/compare/v0.0.6...v0.0.7) (2026-09-20)
+
+
+### Bug Fixes
+
+* enhance configuration and translations for PREdistribuce Consumption Profiles ([28d6ca7](https://github.com/hondzik/predistribuce-consumption-profiles/commit/28d6ca7af2ecb7ce982aaad884c59536ae30acaa))
+
 ## [0.0.6](https://github.com/hondzik/predistribuce-consumption-profiles/compare/v0.0.5...v0.0.6) (2026-09-20)
 
 
