@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.0](https://github.com/hondzik/predistribuce-consumption-profiles/compare/v0.0.11...v1.0.0) (2026-09-20)
+
+
+### Bug Fixes
+
+* handle leading zero-consumption days, network errors, and stale date default ([a2201a9](https://github.com/hondzik/predistribuce-consumption-profiles/commit/a2201a957c7944591f6886cddab5cdae6bde8529))
+
 ## [0.0.11](https://github.com/hondzik/predistribuce-consumption-profiles/compare/v0.0.10...v0.0.11) (2026-09-20)
 
 
