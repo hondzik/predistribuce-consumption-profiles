@@ -1,9 +1,6 @@
 __pycache__/
 work/
 *.pyc
-.claude/
-.mcp.json
-CLAUDE.md
 .pytest_cache/
 .coverage
 htmlcov/
