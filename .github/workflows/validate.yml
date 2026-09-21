@@ -45,5 +45,5 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: "3.14"
-      - run: pip install requests -r requirements-test.txt
+      - run: pip install requests -r conf/requirements-test.txt
       - run: pytest --cov --cov-report=term-missing
