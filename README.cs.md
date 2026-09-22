@@ -9,7 +9,7 @@
 
 Vlastní integrace pro Home Assistant, která se přihlásí do klientského portálu [PREdistribuce](https://www.predistribuce.cz/) (distributor elektřiny pro Prahu), stáhne z chytrého elektroměru čtvrthodinový profil spotřeby za předchozí den a naimportuje ho do Home Assistantu jako dlouhodobou **externí statistiku** — takže se objeví v **Energy dashboardu** stejně jako u běžného energetického senzoru.
 
-![Energy dashboard s naimportovanou spotřebou z PREdistribuce](docs/images/energy.png)
+![Energy dashboard s naimportovanou spotřebou z PREdistribuce](docs/images/energy.cs.png)
 
 ## Obsah <!-- omit from toc -->
 
@@ -69,37 +69,37 @@ Konfigurace probíhá výhradně přes uživatelské rozhraní Home Assistant (N
 
 Přihlašovací údaje se ukládají standardní cestou Home Assistantu (uvnitř config entry, stejně jako u jiných cloud-polling integrací) — nikam jinam se nezapisují. Po nastavení se integrace objeví v Nastavení → Zařízení a služby:
 
-![Nainstalovaná integrace PREdistribuce](docs/images/integration-main.png)
+![Nainstalovaná integrace PREdistribuce](docs/images/integration-main.cs.png)
 
 ### Přidání statistiky do Energy dashboardu
 
 Přidejte statistiku `predistribuce:<EAN>_consumption` jako zdroj spotřeby ze sítě v Nastavení → Dashboardy → Energetika → Elektrická síť:
 
-![Nastavení Energy dashboardu — elektrická síť](docs/images/energy-electricity-grid.png)
+![Nastavení Energy dashboardu — elektrická síť](docs/images/energy-electricity-grid.cs.png)
 
-![Konfigurace připojení k síti se statistikou PREdistribuce](docs/images/energy-grid-connection.png)
+![Konfigurace připojení k síti se statistikou PREdistribuce](docs/images/energy-grid-connection.cs.png)
 
 Další možnosti pro už nakonfigurovaný účet jsou dostupné přes tlačítko **Konfigurovat** u integrace:
 
-![Menu options integrace](docs/images/settings-main.png)
+![Menu options integrace](docs/images/settings-main.cs.png)
 
 ### Přidání dalšího odběrného místa později
 
 Zvolte **Odběrná místa** a vyberte další EAN(y) na účtu. Uložené heslo se použije automaticky — nebude se znovu vyžadovat.
 
-![Options flow — přidání odběrného místa](docs/images/settings-metering-points.png)
+![Options flow — přidání odběrného místa](docs/images/settings-metering-points.cs.png)
 
 ### Změna času importu
 
 Zvolte **Rozvrh** pro změnu hodiny/minuty, kdy se denní import spouští.
 
-![Options flow — změna času importu](docs/images/settings-import-time.png)
+![Options flow — změna času importu](docs/images/settings-import-time.cs.png)
 
 ### Manuální import historických dat
 
 Pro (znovu)stažení konkrétního rozsahu dat u konkrétního odběrného místa — například pro doplnění dat zpětně od doby před nastavením integrace, nebo pro vynucení opakování mimo denní rozvrh — zvolte **Importovat historická data**. Vyberte odběrné místo a rozsah od/do data a odešlete; výsledek ukáže, kolik hodinových záznamů se naimportovalo (0 obvykle znamená, že distributor požadovaný den/dny ještě neuzavřel).
 
-![Options flow — import historických dat](docs/images/settings-historical-data.png)
+![Options flow — import historických dat](docs/images/settings-historical-data.cs.png)
 
 Stejná operace je dostupná i jako akce/service Home Assistantu `predistribuce.import_historical_data` (Nástroje pro vývojáře → Akce), která přijímá config entry, EAN a rozsah `date_from`/`date_to` — vhodné pro skripty a automatizace. Výše popsaný krok v options flow je jen tenký formulář postavený nad touto stejnou akcí.
 
@@ -112,7 +112,7 @@ PREdistribuce nikde nepublikuje pevný čas, kdy jsou data o spotřebě za daný
 - Vytvoří **repair issue** („PREdistribuce: chybějící data"), zobrazenou jako odznak v Nastavení a v přehledu Nastavení → Systém → Opravy, s popisem, které EAN/den chybí.
 - Repair issue je opravitelná: kliknutím na **Opravit** se na vyžádání znovu zkusí stáhnout všechny chybějící dny/EANy. Pokud distributor den pořád nemá uzavřený, issue zůstane otevřená; jakmile se stažení podaří, automaticky zmizí. Další naplánovaný denní běh to zkusí také automaticky, nezávisle na repair issue.
 
-![Repair issue s chybějícími daty](docs/images/repair-missing-data.png)
+![Repair issue s chybějícími daty](docs/images/repair-missing-data.cs.png)
 
 ## Známá omezení
 
