@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/hondzik/predistribuce-consumption-profiles/compare/v1.0.0...v1.0.1) (2026-10-26)
+
+
+### Bug Fixes
+
+* Add expected intervals calculation and enhance hourly aggregation tests for DST handling ([0471fee](https://github.com/hondzik/predistribuce-consumption-profiles/commit/0471feed4368857182bfb14841b4b00fb5f2202b))
+
 ## [1.0.0](https://github.com/hondzik/predistribuce-consumption-profiles/compare/v0.0.11...v1.0.0) (2026-09-20)
 
 
