@@ -270,6 +270,13 @@ class PreDistribuceCoordinator(DataUpdateCoordinator[None]):
         return pre_api.parse_csv(raw)
 
 
+def _expected_intervals(day: dt.date) -> int:
+    """Počet čtvrthodin v lokálním dni: 96, při přechodu času 92 (jaro) / 100 (podzim)."""
+    start = dt.datetime.combine(day, dt.time.min, tzinfo=TZ_PRAGUE)
+    end = dt.datetime.combine(day + dt.timedelta(days=1), dt.time.min, tzinfo=TZ_PRAGUE)
+    return round((end.astimezone(dt.timezone.utc) - start.astimezone(dt.timezone.utc)).total_seconds() / 900)
+
+
 def _aggregate_hourly(
     readings: list[pre_api.IntervalReading],
 ) -> tuple[list[tuple[dt.datetime, float]], dt.date | None]:
@@ -289,9 +296,9 @@ def _aggregate_hourly(
     druhá hodnota je pro coordinator, aby věděl, na co má nastavit
     "čekající" reimport.
 
-    Rozlišení duplicitní místní hodiny při přechodu na zimní čas (`fold`)
-    je NEOVĚŘENÉ — žádný přechod nebyl v testovacích datech, nejbližší je
-    25.10.2026 (viz CLAUDE.md, bod 6). Zkontrolovat hned po tomto datu.
+    Duplicitní místní hodina při přechodu na zimní čas (`fold`) se rozlišuje
+    přes UTC klíč; ověřeno proti reálným datům z 25.10.2026 (první verze
+    s lokálním klíčem obě hodiny slila).
     """
     by_day: dict[dt.date, list[pre_api.IntervalReading]] = {}
     for r in readings:
@@ -316,16 +323,30 @@ def _aggregate_hourly(
             continue
         day_readings = by_day[day]
 
+        expected = _expected_intervals(day)
+        if len(day_readings) != expected:
+            _LOGGER.warning(
+                "den %s má %d čtvrthodinových záznamů, očekáváno %d "
+                "(chybějící nebo duplicitní data z portálu) — hodinové součty "
+                "za tento den mohou být nepřesné",
+                day, len(day_readings), expected,
+            )
+
+        # Klíč musí být UTC: lokální `datetime` s `fold=0` a `fold=1` se v
+        # Pythonu hashuje i porovnává stejně, takže by se obě hodiny 2:00-3:00
+        # při přechodu na zimní čas slily do jednoho dict klíče.
         hourly: dict[dt.datetime, float] = {}
         seen_local_starts: set[dt.datetime] = set()
         for r in day_readings:
             fold = 1 if r.start in seen_local_starts else 0
             seen_local_starts.add(r.start)
             local_start = r.start.replace(tzinfo=TZ_PRAGUE, fold=fold)
-            hour_start = local_start.replace(minute=0, second=0, microsecond=0)
+            hour_start = local_start.astimezone(dt.timezone.utc).replace(
+                minute=0, second=0, microsecond=0
+            )
             hourly[hour_start] = hourly.get(hour_start, 0.0) + (r.consumption_kwh or 0.0)
 
         for hour_start in sorted(hourly):
-            result.append((hour_start.astimezone(dt.timezone.utc), round(hourly[hour_start], 3)))
+            result.append((hour_start, round(hourly[hour_start], 3)))
 
     return result, first_unclosed_day

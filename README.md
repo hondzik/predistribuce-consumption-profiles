@@ -117,7 +117,6 @@ PREdistribuce doesn't publish a fixed time at which a day's consumption data bec
 ## Known limitations
 
 - **Grid feed-in (`-A`, e.g. from solar) is not supported yet.** It hasn't been possible to verify against a real production metering point — support is planned once one is available.
-- **DST transitions are implemented but not yet verified against real data.** The clock-change fold handling (`zoneinfo`, `Europe/Prague`) is expected to be correct but will only be confirmed against a real transition (next one: 2026-10-25).
 - Address labels for metering points (shown next to the EAN when selecting them) are parsed best-effort from the portal's HTML and may fall back to showing just the EAN if the portal's markup doesn't match.
 - This integration is unofficial and depends on the shape of a customer-facing web portal that PREdistribuce can change at any time without notice.
 

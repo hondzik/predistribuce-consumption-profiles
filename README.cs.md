@@ -117,7 +117,6 @@ PREdistribuce nikde nepublikuje pevný čas, kdy jsou data o spotřebě za daný
 ## Známá omezení
 
 - **Dodávka do sítě (`-A`, např. z fotovoltaiky) ještě není podporována.** Nebylo možné ji ověřit proti reálnému odběrnému místu typu výroba — podpora je plánovaná, jakmile bude k dispozici.
-- **Přechod letního/zimního času je implementovaný, ale ještě neověřený proti reálným datům.** Zacházení s „fold" při přechodu (`zoneinfo`, `Europe/Prague`) by mělo být správné, ale potvrdí se až při reálném přechodu (nejbližší: 25. 10. 2026).
 - Popisky adres odběrných míst (zobrazované u EAN při výběru) se parsují nejlepším možným způsobem z HTML portálu a mohou se degradovat na zobrazení jen EAN, pokud se struktura portálu neshoduje s očekáváním.
 - Tato integrace je neoficiální a závisí na struktuře veřejného klientského portálu, kterou může PREdistribuce kdykoliv bez upozornění změnit.
 

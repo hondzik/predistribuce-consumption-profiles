@@ -32,6 +32,7 @@ from custom_components.predistribuce.const import (
 from custom_components.predistribuce.coordinator import (
     PreDistribuceCoordinator,
     _aggregate_hourly,
+    _expected_intervals,
 )
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
@@ -147,6 +148,73 @@ def test_aggregate_hourly_leading_zero_day_is_not_unclosed():
     assert len(hourly) == 2
     consumptions = {consumption for _, consumption in hourly}
     assert consumptions == {0.0, 0.5}
+
+
+def test_aggregate_hourly_dst_fall_back_keeps_duplicate_hour_separate():
+    """25.10.2026 (přechod na zimní čas): lokální hodina 2:00-3:00 je v CSV
+    dvakrát (nejdřív CEST, pak CET). Obě se musí uložit do dvou RŮZNÝCH
+    UTC hodin — dřív se slily do jedné (dict klíč `datetime` s různým `fold`
+    je v Pythonu rovný), jedna UTC hodina chyběla a druhá měla dvojnásobek
+    (ověřeno živě 2026-10-26)."""
+    day = dt.date(2026, 10, 25)
+    readings = []
+    for hour in range(0, 4):
+        passes = 2 if hour == 2 else 1
+        for _ in range(passes):
+            for minute in (0, 15, 30, 45):
+                readings.append(_reading(hour, minute, 0.1, day=day))
+
+    hourly, first_unclosed_day = _aggregate_hourly(readings)
+
+    assert first_unclosed_day is None
+    assert len(hourly) == 5
+    starts = [start for start, _ in hourly]
+    assert starts == [
+        dt.datetime(2026, 10, 24, 22, 0, tzinfo=dt.timezone.utc),
+        dt.datetime(2026, 10, 24, 23, 0, tzinfo=dt.timezone.utc),
+        dt.datetime(2026, 10, 25, 0, 0, tzinfo=dt.timezone.utc),
+        dt.datetime(2026, 10, 25, 1, 0, tzinfo=dt.timezone.utc),
+        dt.datetime(2026, 10, 25, 2, 0, tzinfo=dt.timezone.utc),
+    ]
+    assert all(consumption == 0.4 for _, consumption in hourly)
+
+
+@pytest.mark.parametrize(
+    ("day", "expected"),
+    [
+        (dt.date(2026, 9, 17), 96),
+        (dt.date(2026, 10, 25), 100),
+        (dt.date(2026, 3, 29), 92),
+    ],
+)
+def test_expected_intervals(day, expected):
+    assert _expected_intervals(day) == expected
+
+
+def test_aggregate_hourly_warns_on_incomplete_day(caplog):
+    readings = [_reading(10, m, 0.1) for m in (0, 15, 30)]
+
+    with caplog.at_level("WARNING"):
+        hourly, _ = _aggregate_hourly(readings)
+
+    assert len(hourly) == 1
+    assert "3 čtvrthodinových záznamů, očekáváno 96" in caplog.text
+
+
+def test_aggregate_hourly_no_warning_on_full_dst_day(caplog):
+    day = dt.date(2026, 10, 25)
+    readings = [
+        _reading(h, m, 0.1, day=day)
+        for h in range(0, 4)
+        for _ in range(2 if h == 2 else 1)
+        for m in (0, 15, 30, 45)
+    ]
+    readings += [_reading(h, m, 0.1, day=day) for h in range(4, 24) for m in (0, 15, 30, 45)]
+
+    with caplog.at_level("WARNING"):
+        _aggregate_hourly(readings)
+
+    assert "očekáváno" not in caplog.text
 
 
 def test_aggregate_hourly_treats_none_consumption_as_zero():
